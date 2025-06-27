@@ -53,12 +53,10 @@
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
     <div class="container mx-auto p-6">
-        <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
         </div>
 
-        <!-- Controls -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div class="flex gap-2">
@@ -79,13 +77,10 @@
             </div>
         </div>
 
-        <!-- Notes Container -->
         <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Notes will be dynamically inserted here -->
-        </div>
+            </div>
     </div>
 
-    <!-- View Modal -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -95,8 +90,7 @@
                 </div>
                 
                 <div id="viewModalContent" class="space-y-4">
-                    <!-- Content will be dynamically inserted here -->
-                </div>
+                    </div>
                 
                 <div class="flex gap-2 pt-4">
                     <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
@@ -110,7 +104,6 @@
         </div>
     </div>
 
-    <!-- Create/Edit Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -122,15 +115,14 @@
                 <form id="noteForm" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="text" id="noteTitle" placeholder="Note Title" required class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-                        <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <input type="text" id="noteTags" placeholder="Tags (comma separated)" list="recentTags" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <datalist id="recentTags"></datalist>
                     </div>
                     
-                    <!-- Normal Note Content -->
                     <div id="normalContent" class="note-content hidden">
                         <textarea id="normalText" placeholder="Write your note here..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                     </div>
                     
-                    <!-- Cornell Note Content -->
                     <div id="cornellContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-1">
@@ -148,7 +140,6 @@
                         </div>
                     </div>
                     
-                    <!-- Flashcard Content -->
                     <div id="flashcardContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -182,6 +173,7 @@
         const dbVersion = 1;
         let currentEditingId = null;
         let currentNoteType = 'normal';
+        const MAX_RECENT_TAGS = 3;
 
         // Initialize IndexedDB
         function initDB() {
@@ -194,6 +186,7 @@
             request.onsuccess = function(event) {
                 db = event.target.result;
                 loadNotes();
+                loadRecentTags(); // Load recent tags on app start
             };
             
             request.onupgradeneeded = function(event) {
@@ -256,6 +249,46 @@
                 };
             });
         }
+
+        // --- Recent Tags Logic ---
+        let recentTags = [];
+
+        function loadRecentTags() {
+            const storedTags = localStorage.getItem('recentTags');
+            if (storedTags) {
+                recentTags = JSON.parse(storedTags);
+            }
+            updateRecentTagsDatalist();
+        }
+
+        function saveRecentTags() {
+            localStorage.setItem('recentTags', JSON.stringify(recentTags));
+        }
+
+        function addTagToRecent(tag) {
+            const index = recentTags.indexOf(tag);
+            if (index > -1) {
+                recentTags.splice(index, 1); // Remove if already exists to move to front
+            }
+            recentTags.unshift(tag); // Add to the beginning
+            if (recentTags.length > MAX_RECENT_TAGS) {
+                recentTags.pop(); // Remove the oldest if over limit
+            }
+            saveRecentTags();
+            updateRecentTagsDatalist();
+        }
+
+        function updateRecentTagsDatalist() {
+            const datalist = document.getElementById('recentTags');
+            datalist.innerHTML = '';
+            recentTags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                datalist.appendChild(option);
+            });
+        }
+        // --- End Recent Tags Logic ---
+
 
         // View Modal functions
         function showViewModal(note) {
@@ -344,6 +377,7 @@
             
             // Clear form
             document.getElementById('noteForm').reset();
+            updateRecentTagsDatalist(); // Update datalist when opening create modal
             
             document.getElementById('modal').classList.remove('hidden');
         }
@@ -373,6 +407,7 @@
                 document.getElementById('flashcardFront').value = note.content.front;
                 document.getElementById('flashcardBack').value = note.content.back;
             }
+            updateRecentTagsDatalist(); // Update datalist when opening edit modal
             
             document.getElementById('modal').classList.remove('hidden');
         }
@@ -387,7 +422,8 @@
             e.preventDefault();
             
             const title = document.getElementById('noteTitle').value;
-            const tags = document.getElementById('noteTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const tagsInput = document.getElementById('noteTags').value;
+            const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
             
             let content = {};
             
@@ -417,6 +453,8 @@
             
             try {
                 await saveNote(note);
+                // Add new tags to recent list
+                tags.forEach(tag => addTagToRecent(tag));
                 closeModal();
                 loadNotes();
             } catch (error) {
