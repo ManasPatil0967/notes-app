@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+        }
+        .drag-over {
+            border: 2px dashed #8b5cf6;
+            background-color: #f3e8ff;
+        }
+        .note-card {
+            transition: all 0.2s ease;
+        }
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .flashcard {
+            perspective: 1000px;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
+            <p class="text-purple-600">Organize your thoughts with style</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <button onclick="showCreateModal('normal')" class="bg-blue-200 hover:bg-blue-300 text-blue-800 px-4 py-2 rounded-lg transition-colors">
+                        + Normal Note
+                    </button>
+                    <button onclick="showCreateModal('cornell')" class="bg-green-200 hover:bg-green-300 text-green-800 px-4 py-2 rounded-lg transition-colors">
+                        + Cornell Note
+                    </button>
+                    <button onclick="showCreateModal('flashcard')" class="bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-4 py-2 rounded-lg transition-colors">
+                        + Flashcard
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" placeholder="Search notes..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    <input type="text" id="tagFilter" placeholder="Filter by tag..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Container -->
+        <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Notes will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modalTitle" class="text-2xl font-bold text-gray-800">Create Note</h2>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <form id="noteForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="noteTitle" placeholder="Note Title" required class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    </div>
+                    
+                    <!-- Normal Note Content -->
+                    <div id="normalContent" class="note-content hidden">
+                        <textarea id="normalText" placeholder="Write your note here..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                    </div>
+                    
+                    <!-- Cornell Note Content -->
+                    <div id="cornellContent" class="note-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cue Column</label>
+                                <textarea id="cornellCue" placeholder="Key points, questions..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Note-taking Area</label>
+                                <textarea id="cornellNotes" placeholder="Detailed notes..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                            <textarea id="cornellSummary" placeholder="Summary of key concepts..." rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Flashcard Content -->
+                    <div id="flashcardContent" class="note-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Front (Question)</label>
+                                <textarea id="flashcardFront" placeholder="Question or prompt..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Back (Answer)</label>
+                                <textarea id="flashcardBack" placeholder="Answer or explanation..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2 pt-4">
+                        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+                            Save Note
+                        </button>
+                        <button type="button" onclick="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database setup
+        let db;
+        const dbName = 'NotesDB';
+        const dbVersion = 1;
+        let currentEditingId = null;
+        let currentNoteType = 'normal';
+
+        // Initialize IndexedDB
+        function initDB() {
+            const request = indexedDB.open(dbName, dbVersion);
+            
+            request.onerror = function(event) {
+                console.error('Database error:', event.target.error);
+            };
+            
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadNotes();
+            };
+            
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                const objectStore = db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+                objectStore.createIndex('type', 'type', { unique: false });
+                objectStore.createIndex('title', 'title', { unique: false });
+                objectStore.createIndex('tags', 'tags', { unique: false, multiEntry: true });
+                objectStore.createIndex('createdAt', 'createdAt', { unique: false });
+            };
+        }
+
+        // Save note to database
+        function saveNote(note) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['notes'], 'readwrite');
+                const objectStore = transaction.objectStore('notes');
+                const request = objectStore.put(note);
+                
+                request.onsuccess = function() {
+                    resolve(request.result);
+                };
+                
+                request.onerror = function() {
+                    reject(request.error);
+                };
+            });
+        }
+
+        // Get all notes from database
+        function getAllNotes() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['notes'], 'readonly');
+                const objectStore = transaction.objectStore('notes');
+                const request = objectStore.getAll();
+                
+                request.onsuccess = function() {
+                    resolve(request.result);
+                };
+                
+                request.onerror = function() {
+                    reject(request.error);
+                };
+            });
+        }
+
+        // Delete note from database
+        function deleteNote(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['notes'], 'readwrite');
+                const objectStore = transaction.objectStore('notes');
+                const request = objectStore.delete(id);
+                
+                request.onsuccess = function() {
+                    resolve();
+                };
+                
+                request.onerror = function() {
+                    reject(request.error);
+                };
+            });
+        }
+
+        // Modal functions
+        function showCreateModal(type) {
+            currentNoteType = type;
+            currentEditingId = null;
+            document.getElementById('modalTitle').textContent = `Create ${type.charAt(0).toUpperCase() + type.slice(1)} Note`;
+            
+            // Hide all content sections
+            document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
+            
+            // Show relevant content section
+            document.getElementById(type + 'Content').classList.remove('hidden');
+            
+            // Clear form
+            document.getElementById('noteForm').reset();
+            
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function showEditModal(note) {
+            currentNoteType = note.type;
+            currentEditingId = note.id;
+            document.getElementById('modalTitle').textContent = `Edit ${note.type.charAt(0).toUpperCase() + note.type.slice(1)} Note`;
+            
+            // Hide all content sections
+            document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
+            
+            // Show relevant content section
+            document.getElementById(note.type + 'Content').classList.remove('hidden');
+            
+            // Populate form
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteTags').value = note.tags.join(', ');
+            
+            if (note.type === 'normal') {
+                document.getElementById('normalText').value = note.content.text;
+            } else if (note.type === 'cornell') {
+                document.getElementById('cornellCue').value = note.content.cue;
+                document.getElementById('cornellNotes').value = note.content.notes;
+                document.getElementById('cornellSummary').value = note.content.summary;
+            } else if (note.type === 'flashcard') {
+                document.getElementById('flashcardFront').value = note.content.front;
+                document.getElementById('flashcardBack').value = note.content.back;
+            }
+            
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            currentEditingId = null;
+        }
+
+        // Form submission
+        document.getElementById('noteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('noteTitle').value;
+            const tags = document.getElementById('noteTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            
+            let content = {};
+            
+            if (currentNoteType === 'normal') {
+                content.text = document.getElementById('normalText').value;
+            } else if (currentNoteType === 'cornell') {
+                content.cue = document.getElementById('cornellCue').value;
+                content.notes = document.getElementById('cornellNotes').value;
+                content.summary = document.getElementById('cornellSummary').value;
+            } else if (currentNoteType === 'flashcard') {
+                content.front = document.getElementById('flashcardFront').value;
+                content.back = document.getElementById('flashcardBack').value;
+            }
+            
+            const note = {
+                title,
+                type: currentNoteType,
+                content,
+                tags,
+                createdAt: currentEditingId ? undefined : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (currentEditingId) {
+                note.id = currentEditingId;
+            }
+            
+            try {
+                await saveNote(note);
+                closeModal();
+                loadNotes();
+            } catch (error) {
+                console.error('Error saving note:', error);
+                alert('Error saving note. Please try again.');
+            }
+        });
+
+        // Load and display notes
+        async function loadNotes() {
+            try {
+                const notes = await getAllNotes();
+                displayNotes(notes);
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        function displayNotes(notes) {
+            const container = document.getElementById('notesContainer');
+            container.innerHTML = '';
+            
+            notes.forEach(note => {
+                const noteElement = createNoteElement(note);
+                container.appendChild(noteElement);
+            });
+            
+            // Add drag and drop functionality
+            addDragAndDropListeners();
+        }
+
+        function createNoteElement(note) {
+            const div = document.createElement('div');
+            div.className = 'note-card bg-white rounded-lg shadow-md p-4 cursor-move';
+            div.draggable = true;
+            div.dataset.noteId = note.id;
+            div.dataset.noteType = note.type;
+            
+            // Color coding by type
+            const typeColors = {
+                normal: 'border-l-4 border-blue-400',
+                cornell: 'border-l-4 border-green-400',
+                flashcard: 'border-l-4 border-yellow-400'
+            };
+            
+            div.className += ' ' + typeColors[note.type];
+            
+            let contentHtml = '';
+            
+            if (note.type === 'normal') {
+                contentHtml = `
+                    <div class="mt-3">
+                        <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
+                    </div>
+                `;
+            } else if (note.type === 'cornell') {
+                contentHtml = `
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+                        <div class="bg-purple-50 p-2 rounded">
+                            <strong>Cue:</strong>
+                            <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
+                        </div>
+                        <div class="col-span-2 bg-blue-50 p-2 rounded">
+                            <strong>Notes:</strong>
+                            <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (note.type === 'flashcard') {
+                contentHtml = `
+                    <div class="mt-3 flashcard" onclick="flipCard(this)">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200">
+                                <p class="text-center">${note.content.front}</p>
+                            </div>
+                            <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300">
+                                <p class="text-center">${note.content.back}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-semibold text-gray-800 truncate">${note.title}</h3>
+                    <div class="flex gap-1 ml-2">
+                        <button onclick="showEditModal(${JSON.stringify(note)) class="text-blue-500 hover:text-blue-700 text-sm">✎</button>
+                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm">🗑</button>
+                    </div>
+                </div>
+                <div class="flex gap-1 mb-2">
+                    <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
+                    ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
+                </div>
+                ${contentHtml}
+                <div class="mt-3 text-xs text-gray-500">
+                    ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Flashcard flip functionality
+        function flipCard(element) {
+            element.classList.toggle('flipped');
+        }
+
+        // Delete functionality
+        async function confirmDelete(id) {
+            if (confirm('Are you sure you want to delete this note?')) {
+                try {
+                    await deleteNote(id);
+                    loadNotes();
+                } catch (error) {
+                    console.error('Error deleting note:', error);
+                    alert('Error deleting note. Please try again.');
+                }
+            }
+        }
+
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterNotes);
+        document.getElementById('tagFilter').addEventListener('input', filterNotes);
+
+        async function filterNotes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tagFilter = document.getElementById('tagFilter').value.toLowerCase();
+            
+            try {
+                const allNotes = await getAllNotes();
+                const filteredNotes = allNotes.filter(note => {
+                    const matchesSearch = !searchTerm || 
+                        note.title.toLowerCase().includes(searchTerm) ||
+                        JSON.stringify(note.content).toLowerCase().includes(searchTerm);
+                    
+                    const matchesTag = !tagFilter || 
+                        note.tags.some(tag => tag.toLowerCase().includes(tagFilter));
+                    
+                    return matchesSearch && matchesTag;
+                });
+                
+                displayNotes(filteredNotes);
+            } catch (error) {
+                console.error('Error filtering notes:', error);
+            }
+        }
+
+        // Drag and drop functionality
+        function addDragAndDropListeners() {
+            const noteCards = document.querySelectorAll('.note-card');
+            
+            noteCards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragenter', handleDragEnter);
+                card.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            this.classList.remove('drag-over');
+            
+            if (draggedElement !== this) {
+                const container = document.getElementById('notesContainer');
+                const afterElement = getDragAfterElement(container, e.clientY);
+                
+                if (afterElement == null) {
+                    container.appendChild(draggedElement);
+                } else {
+                    container.insertBefore(draggedElement, afterElement);
+                }
+            }
+            
+            return false;
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.note-card:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Initialize the app
+        initDB();
+    </script>
+</body>
+</html>
