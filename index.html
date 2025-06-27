@@ -407,7 +407,7 @@
                 <div class="flex justify-between items-start mb-2">
                     <h3 class="font-semibold text-gray-800 truncate">${note.title}</h3>
                     <div class="flex gap-1 ml-2">
-                        <button onclick="showEditModal(${JSON.stringify(note)) class="text-blue-500 hover:text-blue-700 text-sm">✎</button>
+                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="text-blue-500 hover:text-blue-700 text-sm">✎</button>
                         <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm">🗑</button>
                     </div>
                 </div>
