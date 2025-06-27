@@ -56,6 +56,7 @@
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
+            <p class="text-purple-600">Organize your thoughts with style</p>
         </div>
 
         <!-- Controls -->
@@ -314,6 +315,15 @@
                     </div>
                 `;
             }
+            
+            // Add creation/update date
+            contentHtml += `
+                <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
+                    <p>Created: ${new Date(note.createdAt).toLocaleString()}</p>
+                    ${note.updatedAt && note.updatedAt !== note.createdAt ? 
+                        `<p>Updated: ${new Date(note.updatedAt).toLocaleString()}</p>` : ''}
+                </div>
+            `;
             
             document.getElementById('viewModalContent').innerHTML = contentHtml;
             
