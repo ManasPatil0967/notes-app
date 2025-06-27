@@ -86,6 +86,31 @@
         </div>
     </div>
 
+    <!-- View Modal -->
+    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="viewModalTitle" class="text-2xl font-bold text-gray-800">View Note</h2>
+                    <button onclick="closeViewModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div id="viewModalContent" class="space-y-4">
+                    <!-- Content will be dynamically inserted here -->
+                </div>
+                
+                <div class="flex gap-2 pt-4">
+                    <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
+                        Edit Note
+                    </button>
+                    <button onclick="closeViewModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Create/Edit Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -231,6 +256,88 @@
                     reject(request.error);
                 };
             });
+        }
+
+        // View Modal functions
+        function showViewModal(note) {
+            document.getElementById('viewModalTitle').textContent = note.title;
+            
+            let contentHtml = '';
+            
+            // Display tags
+            if (note.tags && note.tags.length > 0) {
+                contentHtml += `
+                    <div class="mb-4">
+                        <h3 class="font-semibold text-gray-700 mb-2">Tags:</h3>
+                        <div class="flex gap-2 flex-wrap">
+                            ${note.tags.map(tag => `<span class="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded-full">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Display content based on note type
+            if (note.type === 'normal') {
+                contentHtml += `
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-blue-800 mb-2">Content:</h3>
+                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.text}</div>
+                    </div>
+                `;
+            } else if (note.type === 'cornell') {
+                contentHtml += `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
+                        </div>
+                        <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
+                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
+                    </div>
+                `;
+            } else if (note.type === 'flashcard') {
+                contentHtml += `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
+                            <h3 class="font-semibold text-yellow-800 mb-2">Front (Question):</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.front}</div>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
+                            <h3 class="font-semibold text-yellow-800 mb-2">Back (Answer):</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.back}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add creation/update date
+            contentHtml += `
+                <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
+                    <p>Created: ${new Date(note.createdAt).toLocaleString()}</p>
+                    ${note.updatedAt && note.updatedAt !== note.createdAt ? 
+                        `<p>Updated: ${new Date(note.updatedAt).toLocaleString()}</p>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('viewModalContent').innerHTML = contentHtml;
+            
+            // Set up edit button
+            document.getElementById('editFromViewBtn').onclick = function() {
+                closeViewModal();
+                showEditModal(note);
+            };
+            
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+        
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
         }
 
         // Modal functions
@@ -405,17 +512,19 @@
             
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-gray-800 truncate">${note.title}</h3>
+                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
                     <div class="flex gap-1 ml-2">
-                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="text-blue-500 hover:text-blue-700 text-sm">✎</button>
-                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm">🗑</button>
+                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
+                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
                     </div>
                 </div>
                 <div class="flex gap-1 mb-2">
                     <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
                     ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
                 </div>
-                ${contentHtml}
+                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
+                    ${contentHtml}
+                </div>
                 <div class="mt-3 text-xs text-gray-500">
                     ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
                 </div>
