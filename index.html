@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notes App</title>
-    <!-- Load Tailwind CSS -->
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [
+                require('@tailwindcss/typography'),
+            ],
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom CSS for drag and drop and flashcard animations */
         .dragging {
             opacity: 0.5;
             transform: rotate(3deg);
@@ -29,7 +39,7 @@
         .flashcard-inner {
             position: relative;
             width: 100%;
-            height: 200px; /* Fixed height for consistency */
+            height: 200px;
             text-align: center;
             transition: transform 0.6s;
             transform-style: preserve-3d;
@@ -47,63 +57,43 @@
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            box-sizing: border-box; /* Include padding in element's total width and height */
-            word-wrap: break-word; /* Ensure long words break */
-            overflow: auto; /* Add scroll if content overflows */
         }
         .flashcard-back {
             transform: rotateY(180deg);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen font-sans">
-    <div class="container mx-auto p-4 sm:p-6">
-        <!-- Header -->
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <div class="container mx-auto p-6">
         <div class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-800 mb-2">My Notes</h1>
-            <p class="text-purple-600 text-lg">Organize your thoughts with style</p>
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
+            <p class="text-purple-600">Organize your thoughts with style</p>
         </div>
 
-        <!-- Controls -->
-        <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <!-- Note Creation Buttons -->
-                <div class="flex flex-wrap gap-2 justify-center sm:justify-start">
-                    <button onclick="showCreateModal('normal')" class="bg-blue-200 hover:bg-blue-300 text-blue-800 px-4 py-2 rounded-lg transition-colors text-sm sm:text-base flex-grow sm:flex-grow-0">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <button onclick="showCreateModal('normal')" class="bg-blue-200 hover:bg-blue-300 text-blue-800 px-4 py-2 rounded-lg transition-colors">
                         + Normal Note
                     </button>
-                    <button onclick="showCreateModal('cornell')" class="bg-green-200 hover:bg-green-300 text-green-800 px-4 py-2 rounded-lg transition-colors text-sm sm:text-base flex-grow sm:flex-grow-0">
+                    <button onclick="showCreateModal('cornell')" class="bg-green-200 hover:bg-green-300 text-green-800 px-4 py-2 rounded-lg transition-colors">
                         + Cornell Note
                     </button>
-                    <button onclick="showCreateModal('flashcard')" class="bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-4 py-2 rounded-lg transition-colors text-sm sm:text-base flex-grow sm:flex-grow-0">
+                    <button onclick="showCreateModal('flashcard')" class="bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-4 py-2 rounded-lg transition-colors">
                         + Flashcard
                     </button>
                 </div>
-                <!-- Search and Filter Inputs -->
-                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <input type="text" id="searchInput" placeholder="Search notes..." class="flex-grow px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <input type="text" id="tagFilter" placeholder="Filter by tag..." class="flex-grow px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" placeholder="Search notes..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    <input type="text" id="tagFilter" placeholder="Filter by tag..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
                 </div>
             </div>
         </div>
 
-        <!-- Notes Container -->
         <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Notes will be dynamically inserted here -->
-        </div>
+            </div>
     </div>
 
-    <!-- Message Box -->
-    <div id="messageBox" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
-            <p id="messageBoxContent" class="text-gray-800 text-lg mb-4"></p>
-            <button onclick="closeMessageBox()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
-                OK
-            </button>
-        </div>
-    </div>
-
-    <!-- View Modal -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -113,14 +103,13 @@
                 </div>
                 
                 <div id="viewModalContent" class="space-y-4">
-                    <!-- Content will be dynamically inserted here -->
-                </div>
+                    </div>
                 
-                <div class="flex flex-col sm:flex-row gap-2 pt-4">
-                    <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors flex-grow sm:flex-grow-0">
+                <div class="flex gap-2 pt-4">
+                    <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
                         Edit Note
                     </button>
-                    <button onclick="closeViewModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors flex-grow sm:flex-grow-0">
+                    <button onclick="closeViewModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
                         Close
                     </button>
                 </div>
@@ -128,7 +117,6 @@
         </div>
     </div>
 
-    <!-- Create/Edit Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -143,48 +131,45 @@
                         <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
                     </div>
                     
-                    <!-- Normal Note Content -->
                     <div id="normalContent" class="note-content hidden">
-                        <textarea id="normalText" placeholder="Write your note here..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                        <textarea id="normalText" placeholder="Write your note here using Markdown..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                     </div>
                     
-                    <!-- Cornell Note Content -->
                     <div id="cornellContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Cue Column</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cue Column (Markdown enabled)</label>
                                 <textarea id="cornellCue" placeholder="Key points, questions..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Note-taking Area</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Note-taking Area (Markdown enabled)</label>
                                 <textarea id="cornellNotes" placeholder="Detailed notes..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                         </div>
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary (Markdown enabled)</label>
                             <textarea id="cornellSummary" placeholder="Summary of key concepts..." rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                         </div>
                     </div>
                     
-                    <!-- Flashcard Content -->
                     <div id="flashcardContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Front (Question)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Front (Question - Markdown enabled)</label>
                                 <textarea id="flashcardFront" placeholder="Question or prompt..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Back (Answer)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Back (Answer - Markdown enabled)</label>
                                 <textarea id="flashcardBack" placeholder="Answer or explanation..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="flex flex-col sm:flex-row gap-2 pt-4">
-                        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors flex-grow sm:flex-grow-0">
+                    <div class="flex gap-2 pt-4">
+                        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
                             Save Note
                         </button>
-                        <button type="button" onclick="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors flex-grow sm:flex-grow-0">
+                        <button type="button" onclick="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
                             Cancel
                         </button>
                     </div>
@@ -201,23 +186,12 @@
         let currentEditingId = null;
         let currentNoteType = 'normal';
 
-        // Message Box functions
-        function showMessageBox(message) {
-            document.getElementById('messageBoxContent').textContent = message;
-            document.getElementById('messageBox').classList.remove('hidden');
-        }
-
-        function closeMessageBox() {
-            document.getElementById('messageBox').classList.add('hidden');
-        }
-
         // Initialize IndexedDB
         function initDB() {
             const request = indexedDB.open(dbName, dbVersion);
             
             request.onerror = function(event) {
                 console.error('Database error:', event.target.error);
-                showMessageBox('Error opening database. Please try again.');
             };
             
             request.onsuccess = function(event) {
@@ -309,24 +283,24 @@
                 contentHtml += `
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <h3 class="font-semibold text-blue-800 mb-2">Content:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.text}</div>
+                        <div class="prose max-w-none">${DOMPurify.sanitize(marked.parse(note.content.text))}</div>
                     </div>
                 `;
             } else if (note.type === 'cornell') {
                 contentHtml += `
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="md:col-span-1 bg-purple-50 p-4 rounded-lg">
+                        <div class="bg-purple-50 p-4 rounded-lg">
                             <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.cue))}</div>
                         </div>
                         <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
                             <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
+                            <div class="prose max-w-none">${DOMPurify.sanitize(marked.parse(note.content.notes))}</div>
                         </div>
                     </div>
                     <div class="bg-green-50 p-4 rounded-lg">
                         <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
+                        <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.summary))}</div>
                     </div>
                 `;
             } else if (note.type === 'flashcard') {
@@ -334,11 +308,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
                             <h3 class="font-semibold text-yellow-800 mb-2">Front (Question):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.front}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.front))}</div>
                         </div>
                         <div class="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
                             <h3 class="font-semibold text-yellow-800 mb-2">Back (Answer):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.back}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.back))}</div>
                         </div>
                     </div>
                 `;
@@ -459,7 +433,7 @@
                 loadNotes();
             } catch (error) {
                 console.error('Error saving note:', error);
-                showMessageBox('Error saving note. Please try again.');
+                alert('Error saving note. Please try again.');
             }
         });
 
@@ -506,20 +480,23 @@
             
             if (note.type === 'normal') {
                 contentHtml = `
-                    <div class="mt-3">
-                        <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
+                    <div class="mt-3 prose prose-sm max-w-none">
+                        ${DOMPurify.sanitize(marked.parse(note.content.text.substring(0, 150)))}
+                        ${note.content.text.length > 150 ? '...' : ''}
                     </div>
                 `;
             } else if (note.type === 'cornell') {
                 contentHtml = `
-                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                        <div class="sm:col-span-1 bg-purple-50 p-2 rounded">
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+                        <div class="bg-purple-50 p-2 rounded">
                             <strong>Cue:</strong>
-                            <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
+                            <div class="prose prose-xs max-w-none">${DOMPurify.sanitize(marked.parse(note.content.cue.substring(0, 50)))}</div>
+                            ${note.content.cue.length > 50 ? '...' : ''}
                         </div>
-                        <div class="sm:col-span-2 bg-blue-50 p-2 rounded">
+                        <div class="col-span-2 bg-blue-50 p-2 rounded">
                             <strong>Notes:</strong>
-                            <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
+                            <div class="prose prose-xs max-w-none">${DOMPurify.sanitize(marked.parse(note.content.notes.substring(0, 100)))}</div>
+                            ${note.content.notes.length > 100 ? '...' : ''}
                         </div>
                     </div>
                 `;
@@ -528,10 +505,10 @@
                     <div class="mt-3 flashcard" onclick="flipCard(this)">
                         <div class="flashcard-inner">
                             <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200">
-                                <p class="text-center text-gray-800 text-base font-semibold">${note.content.front}</p>
+                                <div class="prose prose-sm max-w-none text-center">${DOMPurify.sanitize(marked.parse(note.content.front))}</div>
                             </div>
                             <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300">
-                                <p class="text-center text-gray-800 text-base">${note.content.back}</p>
+                                <div class="prose prose-sm max-w-none text-center">${DOMPurify.sanitize(marked.parse(note.content.back))}</div>
                             </div>
                         </div>
                     </div>
@@ -540,17 +517,17 @@
             
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600 text-lg" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
+                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\")}) title="Click to view full note">${note.title}</h3>
                     <div class="flex gap-1 ml-2">
-                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-lg" title="Edit note">✎</button>
-                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-lg" title="Delete note">🗑</button>
+                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
+                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-1 mb-2">
+                <div class="flex gap-1 mb-2">
                     <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
                     ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
                 </div>
-                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
+                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="cursor-pointer">
                     ${contentHtml}
                 </div>
                 <div class="mt-3 text-xs text-gray-500">
@@ -568,18 +545,14 @@
 
         // Delete functionality
         async function confirmDelete(id) {
-            // Using a custom message box instead of confirm()
-            showMessageBox('Are you sure you want to delete this note? <br><br> <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors mr-2" onclick="executeDelete(' + id + ')">Yes, Delete</button> <button class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors" onclick="closeMessageBox()">Cancel</button>');
-        }
-
-        async function executeDelete(id) {
-            closeMessageBox(); // Close the confirmation message
-            try {
-                await deleteNote(id);
-                loadNotes();
-            } catch (error) {
-                console.error('Error deleting note:', error);
-                showMessageBox('Error deleting note. Please try again.');
+            if (confirm('Are you sure you want to delete this note?')) {
+                try {
+                    await deleteNote(id);
+                    loadNotes();
+                } catch (error) {
+                    console.error('Error deleting note:', error);
+                    alert('Error deleting note. Please try again.');
+                }
             }
         }
 
@@ -630,9 +603,7 @@
             draggedElement = this;
             this.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
-            // It's generally better to pass just the ID and fetch the data on drop if needed,
-            // but for simple reordering, outerHTML can work if handled carefully.
-            e.dataTransfer.setData('text/plain', this.dataset.noteId); 
+            e.dataTransfer.setData('text/html', this.outerHTML);
         }
 
         function handleDragEnd(e) {
@@ -645,27 +616,11 @@
                 e.preventDefault();
             }
             e.dataTransfer.dropEffect = 'move';
-            const container = document.getElementById('notesContainer');
-            const afterElement = getDragAfterElement(container, e.clientY);
-            const currentDraggable = document.querySelector('.dragging');
-
-            if (afterElement == null) {
-                if (container.lastChild !== currentDraggable) {
-                    container.appendChild(currentDraggable);
-                }
-            } else {
-                if (afterElement !== currentDraggable.nextSibling) {
-                    container.insertBefore(currentDraggable, afterElement);
-                }
-            }
             return false;
         }
 
         function handleDragEnter(e) {
-            // Add visual feedback only if it's a different element
-            if (this !== draggedElement) {
-                this.classList.add('drag-over');
-            }
+            this.classList.add('drag-over');
         }
 
         function handleDragLeave(e) {
@@ -679,9 +634,16 @@
             
             this.classList.remove('drag-over');
             
-            // The actual reordering has largely been handled by dragover
-            // You might want to save the new order to IndexedDB here if persistence is needed
-            // For now, it's a visual reorder.
+            if (draggedElement !== this) {
+                const container = document.getElementById('notesContainer');
+                const afterElement = getDragAfterElement(container, e.clientY);
+                
+                if (afterElement == null) {
+                    container.appendChild(draggedElement);
+                } else {
+                    container.insertBefore(draggedElement, afterElement);
+                }
+            }
             
             return false;
         }
@@ -706,4 +668,3 @@
     </script>
 </body>
 </html>
-
