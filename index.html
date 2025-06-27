@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notes App</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [
+                require('@tailwindcss/typography'),
+            ],
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .dragging {
@@ -53,13 +65,11 @@
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
     <div class="container mx-auto p-6">
-        <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
             <p class="text-purple-600">Organize your thoughts with style</p>
         </div>
 
-        <!-- Controls -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div class="flex gap-2">
@@ -80,13 +90,10 @@
             </div>
         </div>
 
-        <!-- Notes Container -->
         <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Notes will be dynamically inserted here -->
-        </div>
+            </div>
     </div>
 
-    <!-- View Modal -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -96,8 +103,7 @@
                 </div>
                 
                 <div id="viewModalContent" class="space-y-4">
-                    <!-- Content will be dynamically inserted here -->
-                </div>
+                    </div>
                 
                 <div class="flex gap-2 pt-4">
                     <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
@@ -111,7 +117,6 @@
         </div>
     </div>
 
-    <!-- Create/Edit Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -126,38 +131,35 @@
                         <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
                     </div>
                     
-                    <!-- Normal Note Content -->
                     <div id="normalContent" class="note-content hidden">
-                        <textarea id="normalText" placeholder="Write your note here..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                        <textarea id="normalText" placeholder="Write your note here using Markdown..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                     </div>
                     
-                    <!-- Cornell Note Content -->
                     <div id="cornellContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Cue Column</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cue Column (Markdown enabled)</label>
                                 <textarea id="cornellCue" placeholder="Key points, questions..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Note-taking Area</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Note-taking Area (Markdown enabled)</label>
                                 <textarea id="cornellNotes" placeholder="Detailed notes..." rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                         </div>
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary (Markdown enabled)</label>
                             <textarea id="cornellSummary" placeholder="Summary of key concepts..." rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                         </div>
                     </div>
                     
-                    <!-- Flashcard Content -->
                     <div id="flashcardContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Front (Question)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Front (Question - Markdown enabled)</label>
                                 <textarea id="flashcardFront" placeholder="Question or prompt..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Back (Answer)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Back (Answer - Markdown enabled)</label>
                                 <textarea id="flashcardBack" placeholder="Answer or explanation..." rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                             </div>
                         </div>
@@ -281,7 +283,7 @@
                 contentHtml += `
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <h3 class="font-semibold text-blue-800 mb-2">Content:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.text}</div>
+                        <div class="prose max-w-none">${DOMPurify.sanitize(marked.parse(note.content.text))}</div>
                     </div>
                 `;
             } else if (note.type === 'cornell') {
@@ -289,16 +291,16 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="bg-purple-50 p-4 rounded-lg">
                             <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.cue))}</div>
                         </div>
                         <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
                             <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
+                            <div class="prose max-w-none">${DOMPurify.sanitize(marked.parse(note.content.notes))}</div>
                         </div>
                     </div>
                     <div class="bg-green-50 p-4 rounded-lg">
                         <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
+                        <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.summary))}</div>
                     </div>
                 `;
             } else if (note.type === 'flashcard') {
@@ -306,11 +308,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
                             <h3 class="font-semibold text-yellow-800 mb-2">Front (Question):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.front}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.front))}</div>
                         </div>
                         <div class="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
                             <h3 class="font-semibold text-yellow-800 mb-2">Back (Answer):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.back}</div>
+                            <div class="prose prose-sm max-w-none">${DOMPurify.sanitize(marked.parse(note.content.back))}</div>
                         </div>
                     </div>
                 `;
@@ -478,8 +480,9 @@
             
             if (note.type === 'normal') {
                 contentHtml = `
-                    <div class="mt-3">
-                        <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
+                    <div class="mt-3 prose prose-sm max-w-none">
+                        ${DOMPurify.sanitize(marked.parse(note.content.text.substring(0, 150)))}
+                        ${note.content.text.length > 150 ? '...' : ''}
                     </div>
                 `;
             } else if (note.type === 'cornell') {
@@ -487,11 +490,13 @@
                     <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
                         <div class="bg-purple-50 p-2 rounded">
                             <strong>Cue:</strong>
-                            <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
+                            <div class="prose prose-xs max-w-none">${DOMPurify.sanitize(marked.parse(note.content.cue.substring(0, 50)))}</div>
+                            ${note.content.cue.length > 50 ? '...' : ''}
                         </div>
                         <div class="col-span-2 bg-blue-50 p-2 rounded">
                             <strong>Notes:</strong>
-                            <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
+                            <div class="prose prose-xs max-w-none">${DOMPurify.sanitize(marked.parse(note.content.notes.substring(0, 100)))}</div>
+                            ${note.content.notes.length > 100 ? '...' : ''}
                         </div>
                     </div>
                 `;
@@ -500,10 +505,10 @@
                     <div class="mt-3 flashcard" onclick="flipCard(this)">
                         <div class="flashcard-inner">
                             <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200">
-                                <p class="text-center">${note.content.front}</p>
+                                <div class="prose prose-sm max-w-none text-center">${DOMPurify.sanitize(marked.parse(note.content.front))}</div>
                             </div>
                             <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300">
-                                <p class="text-center">${note.content.back}</p>
+                                <div class="prose prose-sm max-w-none text-center">${DOMPurify.sanitize(marked.parse(note.content.back))}</div>
                             </div>
                         </div>
                     </div>
@@ -512,9 +517,9 @@
             
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
+                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\")}) title="Click to view full note">${note.title}</h3>
                     <div class="flex gap-1 ml-2">
-                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
+                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
                         <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
                     </div>
                 </div>
@@ -522,7 +527,7 @@
                     <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
                     ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
                 </div>
-                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
+                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\")}) class="cursor-pointer">
                     ${contentHtml}
                 </div>
                 <div class="mt-3 text-xs text-gray-500">
