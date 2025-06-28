@@ -1,4 +1,3 @@
-
 // Database setup
 let db;
 const dbName = 'NotesDB';
@@ -141,7 +140,7 @@ function showViewModal(note) {
     // Add creation/update date
     contentHtml += `
                 <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
-                    ${note.updatedAt && note.updatedAt !== note.createdAt ? 
+                    ${note.updatedAt && note.updatedAt !== note.createdAt ?
                             `<p>Updated: ${new Date(note.updatedAt).toLocaleString()}</p>` :
                     `<p>Created: ${new Date(note.createdAt).toLocaleString()}</p>` }
                 </div>
@@ -214,7 +213,17 @@ function closeModal() {
     currentEditingId = null;
 }
 
-// Form submission
+// Import Flashcards Modal functions
+function showImportFlashcardsModal() {
+    document.getElementById('flashcardImportTextarea').value = ''; // Clear previous input
+    document.getElementById('importFlashcardsModal').classList.remove('hidden');
+}
+
+function closeImportFlashcardsModal() {
+    document.getElementById('importFlashcardsModal').classList.add('hidden');
+}
+
+// Form submission for individual notes
 document.getElementById('noteForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -256,6 +265,70 @@ document.getElementById('noteForm').addEventListener('submit', async function(e)
         alert('Error saving note. Please try again.');
     }
 });
+
+// Parse and save multiple flashcards from text input
+document.getElementById('submitImportFlashcardsBtn').addEventListener('click', async function() {
+    const inputText = document.getElementById('flashcardImportTextarea').value;
+    const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+    const flashcardsToSave = [];
+    let currentFlashcard = {};
+
+    for (const line of lines) {
+        if (line.startsWith('N:')) {
+            if (Object.keys(currentFlashcard).length > 0) { // Save previous flashcard if exists
+                flashcardsToSave.push(currentFlashcard);
+            }
+            currentFlashcard = {
+                type: 'flashcard',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                tags: []
+            };
+            currentFlashcard.title = line.substring(2).trim();
+        } else if (line.startsWith('T:')) {
+            currentFlashcard.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
+        } else if (line.startsWith('Q:')) {
+            currentFlashcard.content = currentFlashcard.content || {};
+            currentFlashcard.content.front = line.substring(2).trim();
+        } else if (line.startsWith('A:')) {
+            currentFlashcard.content = currentFlashcard.content || {};
+            currentFlashcard.content.back = line.substring(2).trim();
+        }
+    }
+    if (Object.keys(currentFlashcard).length > 0) { // Save the last flashcard
+        flashcardsToSave.push(currentFlashcard);
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const flashcard of flashcardsToSave) {
+        // Basic validation for flashcard data
+        if (!flashcard.title || !flashcard.content || !flashcard.content.front || !flashcard.content.back) {
+            console.warn('Skipping incomplete flashcard:', flashcard);
+            errorCount++;
+            continue;
+        }
+        try {
+            await saveNote(flashcard);
+            successCount++;
+        } catch (error) {
+            console.error('Error saving flashcard:', flashcard, error);
+            errorCount++;
+        }
+    }
+
+    closeImportFlashcardsModal();
+    loadNotes();
+    if (successCount > 0) {
+        alert(`Successfully imported ${successCount} flashcard(s).`);
+    }
+    if (errorCount > 0) {
+        alert(`Failed to import ${errorCount} flashcard(s) due to missing data or errors. Check console for details.`);
+    }
+});
+
 
 // Load and display notes
 async function loadNotes() {
@@ -321,10 +394,10 @@ function createNoteElement(note) {
         contentHtml = `
                     <div class="mt-3 flashcard" onclick="flipCard(this)">
                         <div class="flashcard-inner">
-                            <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200">
-                                <p class="text-center">${note.content.front}</p>
+                            <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200 p-2 rounded flex items-center justify-center min-h-[80px]">
+                                <p class="text-center font-medium">${note.content.front}</p>
                             </div>
-                            <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300">
+                            <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300 p-2 rounded flex items-center justify-center min-h-[80px]">
                                 <p class="text-center">${note.content.back}</p>
                             </div>
                         </div>
@@ -352,7 +425,7 @@ function createNoteElement(note) {
                 </div>
             `;
 
-                    return div;
+            return div;
 }
 
 // Flashcard flip functionality
@@ -384,11 +457,11 @@ async function filterNotes() {
     try {
         const allNotes = await getAllNotes();
         const filteredNotes = allNotes.filter(note => {
-            const matchesSearch = !searchTerm || 
+            const matchesSearch = !searchTerm ||
                 note.title.toLowerCase().includes(searchTerm) ||
                 JSON.stringify(note.content).toLowerCase().includes(searchTerm);
 
-            const matchesTag = !tagFilter || 
+            const matchesTag = !tagFilter ||
                 note.tags.some(tag => tag.toLowerCase().includes(tagFilter));
 
             return matchesSearch && matchesTag;
@@ -479,6 +552,9 @@ function getDragAfterElement(container, y) {
         }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
+
+// Event listener for the "Import Flashcards" button
+document.getElementById('importFlashcardsBtn').addEventListener('click', showImportFlashcardsModal);
 
 // Initialize the app
 initDB();
