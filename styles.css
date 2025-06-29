@@ -42,3 +42,44 @@
 .flashcard-back {
     transform: rotateY(180deg);
 }
+.flashcard {
+    perspective: 1000px; /* Gives the 3D effect */
+    height: 100%; /* Ensure the flashcard container takes up available height */
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem; /* Adjust padding as needed */
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+.flashcard-front {
+    /* Styles for the front of the flashcard */
+    z-index: 2;
+    transform: rotateY(0deg);
+}
+
+.flashcard-back {
+    /* Styles for the back of the flashcard */
+    transform: rotateY(180deg);
+}
