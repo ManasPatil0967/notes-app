@@ -6,30 +6,72 @@
     <title>Notes App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* CSS for Flashcard Flip Effect */
+        .flashcard {
+            perspective: 1000px; /* Gives the 3D effect */
+            height: 100%; /* Ensure the flashcard container takes up available height */
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* Adjust padding as needed */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        .flashcard-front {
+            /* Styles for the front of the flashcard */
+            z-index: 2;
+            transform: rotateY(0deg);
+        }
+
+        .flashcard-back {
+            /* Styles for the back of the flashcard */
+            transform: rotateY(180deg);
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
     <div class="container mx-auto p-6">
-        <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
         </div>
 
-        <!-- Controls -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div class="flex gap-2">
-                    <button onclick="showCreateModal('normal')" class="bg-blue-200 hover:bg-blue-300 text-blue-800 px-4 py-2 rounded-lg transition-colors">
-                        + Normal Note
-                    </button>
-                    <button onclick="showCreateModal('cornell')" class="bg-green-200 hover:bg-green-300 text-green-800 px-4 py-2 rounded-lg transition-colors">
-                        + Cornell Note
-                    </button>
-                    <button onclick="showCreateModal('flashcard')" class="bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-4 py-2 rounded-lg transition-colors">
-                        + Flashcard
-                    </button>
-                    <button id="importFlashcardsBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
-                        Import Flashcards
-                    </button>
+                    <select id="createNoteSelect" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
+                        <option value="">Create Note</option>
+                        <option value="normal">Normal Note</option>
+                        <option value="cornell">Cornell Note</option>
+                        <option value="flashcard">Flashcard</option>
+                    </select>
+
+                    <select id="importSelect" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
+                        <option value="">Import Note</option>
+                        <option value="normal">Import Notes</option> <option value="cornell">Import Cornell Notes</option>
+                        <option value="flashcards">Import Flashcards</option>
+                    </select>
                 </div>
                 <div class="flex gap-2">
                     <input type="text" id="searchInput" placeholder="Search notes..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
@@ -38,13 +80,10 @@
             </div>
         </div>
 
-        <!-- Notes Container -->
         <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Notes will be dynamically inserted here -->
-        </div>
+            </div>
     </div>
 
-    <!-- View Modal -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -54,8 +93,7 @@
                 </div>
                 
                 <div id="viewModalContent" class="space-y-4">
-                    <!-- Content will be dynamically inserted here -->
-                </div>
+                    </div>
                 
                 <div class="flex gap-2 pt-4">
                     <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
@@ -69,7 +107,6 @@
         </div>
     </div>
 
-    <!-- Create/Edit Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
@@ -84,12 +121,10 @@
                         <input type="text" id="noteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
                     </div>
                     
-                    <!-- Normal Note Content -->
                     <div id="normalContent" class="note-content hidden">
                         <textarea id="normalText" placeholder="Write your note here..." rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
                     </div>
                     
-                    <!-- Cornell Note Content -->
                     <div id="cornellContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="md:col-span-1">
@@ -107,7 +142,6 @@
                         </div>
                     </div>
                     
-                    <!-- Flashcard Content -->
                     <div id="flashcardContent" class="note-content hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -142,7 +176,8 @@
             </div>
             <div class="p-6">
                 <p class="text-gray-700 mb-4">Enter flashcard data in the following format. Each flashcard starts with "N:".</p>
-                <pre class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-4">N: My First Flashcard
+                <pre class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-4">
+N: My First Flashcard
 T: history, dates
 Q: What year did WWII end?
 A: 1945
@@ -150,14 +185,79 @@ A: 1945
 N: Capital of France
 T: geography, cities
 Q: What is the capital of France?
-A: Paris</pre>
+A: Paris
+                </pre>
                 <textarea id="flashcardImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter flashcard data here..."></textarea>
             </div>
             <div class="flex justify-end p-4 border-t">
                 <button id="submitImportFlashcardsBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     Import
                 </button>
-                <button type="button" onclick="closeImportFlashcardsModal()" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                <button type="button" id="cancelImportFlashcardsBtn" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importNotesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-2xl font-semibold text-gray-800">Import Notes</h2>
+                <button onclick="closeImportNotesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 mb-4">Enter note data in the following format. Each note starts with "N:".</p>
+                <pre class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-4">
+N: My First Note
+T: personal, ideas
+C: This is the content of my first note.
+
+N: Meeting Notes
+T: work, meetings
+C: Notes from the meeting on project updates.
+                </pre>
+                <textarea id="noteImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter note data here..."></textarea>
+            </div>
+            <div class="flex justify-end p-4 border-t">
+                <button id="submitImportNotesBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Import
+                </button>
+                <button type="button" id="cancelImportNotesBtn" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importCornellNotesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-2xl font-semibold text-gray-800">Import Cornell Notes</h2>
+                <button onclick="closeImportCornellNotesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 mb-4">Enter Cornell note data in the following format. Each note starts with "N:".</p>
+                <pre class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-4">
+N: My First Cornell Note
+T: study, notes
+Q: This is the content of my first Cornell note. (Cue)
+M: Detailed notes from the lecture. (Main Notes Area)
+S: Summary of key concepts.
+
+N: Lecture Notes
+T: education, lectures
+Q: Key questions. (Cue)
+M: Important points and examples from the lecture. (Main Notes Area)
+S: Concise summary of the lecture's main ideas.
+                </pre>
+                <textarea id="cornellNoteImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter Cornell note data here..."></textarea>
+            </div>
+            <div class="flex justify-end p-4 border-t">
+                <button id="submitImportCornellNotesBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Import
+                </button>
+                <button type="button" id="cancelImportCornellNotesBtn" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     Cancel
                 </button>
             </div>

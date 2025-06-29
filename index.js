@@ -1,11 +1,10 @@
-// Database setup
 let db;
 const dbName = 'NotesDB';
 const dbVersion = 1;
 let currentEditingId = null;
 let currentNoteType = 'normal';
 
-// Initialize IndexedDB
+
 function initDB() {
     const request = indexedDB.open(dbName, dbVersion);
 
@@ -28,7 +27,7 @@ function initDB() {
     };
 }
 
-// Save note to database
+
 function saveNote(note) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(['notes'], 'readwrite');
@@ -45,7 +44,7 @@ function saveNote(note) {
     });
 }
 
-// Get all notes from database
+
 function getAllNotes() {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(['notes'], 'readonly');
@@ -62,7 +61,7 @@ function getAllNotes() {
     });
 }
 
-// Delete note from database
+
 function deleteNote(id) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(['notes'], 'readwrite');
@@ -79,76 +78,76 @@ function deleteNote(id) {
     });
 }
 
-// View Modal functions
+
 function showViewModal(note) {
     document.getElementById('viewModalTitle').textContent = note.title;
 
     let contentHtml = '';
 
-    // Display tags
+    
     if (note.tags && note.tags.length > 0) {
         contentHtml += `
-                    <div class="mb-4">
-                        <h3 class="font-semibold text-gray-700 mb-2">Tags:</h3>
-                        <div class="flex gap-2 flex-wrap">
-                            ${note.tags.map(tag => `<span class="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded-full">${tag}</span>`).join('')}
-                        </div>
-                    </div>
-                `;
+            <div class="mb-4">
+                <h3 class="font-semibold text-gray-700 mb-2">Tags:</h3>
+                <div class="flex gap-2 flex-wrap">
+                    ${note.tags.map(tag => `<span class="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded-full">${tag}</span>`).join('')}
+                </div>
+            </div>
+        `;
     }
 
-    // Display content based on note type
+    
     if (note.type === 'normal') {
         contentHtml += `
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-blue-800 mb-2">Content:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.text}</div>
-                    </div>
-                `;
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">Content:</h3>
+                <div class="text-gray-700 whitespace-pre-wrap">${note.content.text}</div>
+            </div>
+        `;
     } else if (note.type === 'cornell') {
         contentHtml += `
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
-                        </div>
-                        <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
-                        </div>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
-                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
-                    </div>
-                `;
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
+                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
+                </div>
+                <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
+                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
+                </div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
+                <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
+            </div>
+        `;
     } else if (note.type === 'flashcard') {
         contentHtml += `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
-                            <h3 class="font-semibold text-yellow-800 mb-2">Front (Question):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.front}</div>
-                        </div>
-                        <div class="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
-                            <h3 class="font-semibold text-yellow-800 mb-2">Back (Answer):</h3>
-                            <div class="text-gray-700 whitespace-pre-wrap">${note.content.back}</div>
-                        </div>
-                    </div>
-                `;
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
+                    <h3 class="font-semibold text-yellow-800 mb-2">Front (Question):</h3>
+                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.front}</div>
+                </div>
+                <div class="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
+                    <h3 class="font-semibold text-yellow-800 mb-2">Back (Answer):</h3>
+                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.back}</div>
+                </div>
+            </div>
+        `;
     }
 
-    // Add creation/update date
+    
     contentHtml += `
-                <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
-                    ${note.updatedAt && note.updatedAt !== note.createdAt ?
-                            `<p>Updated: ${new Date(note.updatedAt).toLocaleString()}</p>` :
-                    `<p>Created: ${new Date(note.createdAt).toLocaleString()}</p>` }
-                </div>
-            `;
+        <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
+            ${note.updatedAt && note.updatedAt !== note.createdAt ?
+                `<p>Updated: ${new Date(note.updatedAt).toLocaleString()}</p>` :
+            `<p>Created: ${new Date(note.createdAt).toLocaleString()}</p>` }
+        </div>
+    `;
 
     document.getElementById('viewModalContent').innerHTML = contentHtml;
 
-    // Set up edit button
+    
     document.getElementById('editFromViewBtn').onclick = function() {
         closeViewModal();
         showEditModal(note);
@@ -161,19 +160,19 @@ function closeViewModal() {
     document.getElementById('viewModal').classList.add('hidden');
 }
 
-// Modal functions
+
 function showCreateModal(type) {
     currentNoteType = type;
     currentEditingId = null;
     document.getElementById('modalTitle').textContent = `Create ${type.charAt(0).toUpperCase() + type.slice(1)} Note`;
 
-    // Hide all content sections
+    
     document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
 
-    // Show relevant content section
+    
     document.getElementById(type + 'Content').classList.remove('hidden');
 
-    // Clear form
+    
     document.getElementById('noteForm').reset();
 
     document.getElementById('modal').classList.remove('hidden');
@@ -184,13 +183,13 @@ function showEditModal(note) {
     currentEditingId = note.id;
     document.getElementById('modalTitle').textContent = `Edit ${note.type.charAt(0).toUpperCase() + note.type.slice(1)} Note`;
 
-    // Hide all content sections
+    
     document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
 
-    // Show relevant content section
+    
     document.getElementById(note.type + 'Content').classList.remove('hidden');
 
-    // Populate form
+    
     document.getElementById('noteTitle').value = note.title;
     document.getElementById('noteTags').value = note.tags.join(', ');
 
@@ -211,19 +210,49 @@ function showEditModal(note) {
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
     currentEditingId = null;
+    
+    document.getElementById('createNoteSelect').value = "";
+    document.getElementById('importSelect').value = "";
 }
 
-// Import Flashcards Modal functions
+
 function showImportFlashcardsModal() {
-    document.getElementById('flashcardImportTextarea').value = ''; // Clear previous input
+    document.getElementById('flashcardImportTextarea').value = '';
     document.getElementById('importFlashcardsModal').classList.remove('hidden');
 }
 
 function closeImportFlashcardsModal() {
     document.getElementById('importFlashcardsModal').classList.add('hidden');
+    
+    document.getElementById('createNoteSelect').value = "";
+    document.getElementById('importSelect').value = "";
 }
 
-// Form submission for individual notes
+function showImportNotesModal() {
+    document.getElementById('noteImportTextarea').value = '';
+    document.getElementById('importNotesModal').classList.remove('hidden');
+}
+
+function closeImportNotesModal() {
+    document.getElementById('importNotesModal').classList.add('hidden');
+    
+    document.getElementById('createNoteSelect').value = "";
+    document.getElementById('importSelect').value = "";
+}
+
+function showImportCornellModal() {
+    document.getElementById('cornellNoteImportTextarea').value = '';
+    document.getElementById('importCornellNotesModal').classList.remove('hidden');
+}
+
+function closeImportCornellModal() {
+    document.getElementById('importCornellNotesModal').classList.add('hidden');
+    
+    document.getElementById('createNoteSelect').value = "";
+    document.getElementById('importSelect').value = "";
+}
+
+
 document.getElementById('noteForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -266,7 +295,7 @@ document.getElementById('noteForm').addEventListener('submit', async function(e)
     }
 });
 
-// Parse and save multiple flashcards from text input
+
 document.getElementById('submitImportFlashcardsBtn').addEventListener('click', async function() {
     const inputText = document.getElementById('flashcardImportTextarea').value;
     const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -276,7 +305,7 @@ document.getElementById('submitImportFlashcardsBtn').addEventListener('click', a
 
     for (const line of lines) {
         if (line.startsWith('N:')) {
-            if (Object.keys(currentFlashcard).length > 0) { // Save previous flashcard if exists
+            if (Object.keys(currentFlashcard).length > 0) {
                 flashcardsToSave.push(currentFlashcard);
             }
             currentFlashcard = {
@@ -296,7 +325,7 @@ document.getElementById('submitImportFlashcardsBtn').addEventListener('click', a
             currentFlashcard.content.back = line.substring(2).trim();
         }
     }
-    if (Object.keys(currentFlashcard).length > 0) { // Save the last flashcard
+    if (Object.keys(currentFlashcard).length > 0) {
         flashcardsToSave.push(currentFlashcard);
     }
 
@@ -304,7 +333,7 @@ document.getElementById('submitImportFlashcardsBtn').addEventListener('click', a
     let errorCount = 0;
 
     for (const flashcard of flashcardsToSave) {
-        // Basic validation for flashcard data
+        
         if (!flashcard.title || !flashcard.content || !flashcard.content.front || !flashcard.content.back) {
             console.warn('Skipping incomplete flashcard:', flashcard);
             errorCount++;
@@ -329,8 +358,134 @@ document.getElementById('submitImportFlashcardsBtn').addEventListener('click', a
     }
 });
 
+document.getElementById('cancelImportFlashcardsBtn').addEventListener('click', closeImportFlashcardsModal);
 
-// Load and display notes
+document.getElementById('submitImportNotesBtn').addEventListener('click', async function() {
+    const inputText = document.getElementById('noteImportTextarea').value;
+    const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+    const notesToSave = [];
+    let currentNote = {};
+
+    for (const line of lines) {
+        if (line.startsWith('N:')) {
+            if (Object.keys(currentNote).length > 0) {
+                notesToSave.push(currentNote);
+            }
+            currentNote = {
+                type: 'normal', 
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                tags: [],
+                content: {} 
+            };
+            currentNote.title = line.substring(2).trim();
+        } else if (line.startsWith('T:')) {
+            currentNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
+        } else if (line.startsWith('C:')) {
+            currentNote.content.text = line.substring(2).trim(); 
+        }
+    }
+    if (Object.keys(currentNote).length > 0) {
+        notesToSave.push(currentNote);
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const note of notesToSave) {
+        
+        if (!note.title || !note.content || !note.content.text) {
+            console.warn('Skipping incomplete normal note:', note);
+            errorCount++;
+            continue;
+        }
+        try {
+            await saveNote(note);
+            successCount++;
+        } catch (error) {
+            console.error('Error saving normal note:', note, error);
+            errorCount++;
+        }
+    }
+
+    closeImportNotesModal();
+    loadNotes(); 
+    if (successCount > 0) {
+        alert(`Successfully imported ${successCount} normal note(s).`);
+    }
+    if (errorCount > 0) {
+        alert(`Failed to import ${errorCount} normal note(s) due to missing data or errors. Check console for details.`);
+    }
+});
+
+document.getElementById('cancelImportNotesBtn').addEventListener('click', closeImportNotesModal);
+
+document.getElementById('submitImportCornellNotesBtn').addEventListener('click', async function() {
+    const inputText = document.getElementById('cornellNoteImportTextarea').value;
+    const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+    const cornellNotesToSave = [];
+    let currentCornellNote = {};
+
+    for (const line of lines) {
+        if (line.startsWith('N:')) {
+            if (Object.keys(currentCornellNote).length > 0) {
+                cornellNotesToSave.push(currentCornellNote);
+            }
+            currentCornellNote = {
+                type: 'cornell',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                tags: [],
+                content: {} 
+            };
+            currentCornellNote.title = line.substring(2).trim();
+        } else if (line.startsWith('T:')) {
+            currentCornellNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
+        } else if (line.startsWith('Q:')) { 
+            currentCornellNote.content.cue = line.substring(2).trim();
+        } else if (line.startsWith('M:')) { 
+            currentCornellNote.content.notes = line.substring(2).trim();
+        } else if (line.startsWith('S:')) { 
+            currentCornellNote.content.summary = line.substring(2).trim();
+        }
+    }
+    if (Object.keys(currentCornellNote).length > 0) {
+        cornellNotesToSave.push(currentCornellNote);
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const cornellNote of cornellNotesToSave) {
+        
+        if (!cornellNote.title || !cornellNote.content || !cornellNote.content.cue || !cornellNote.content.notes || !cornellNote.content.summary) {
+            console.warn('Skipping incomplete Cornell note:', cornellNote);
+            errorCount++;
+            continue;
+        }
+        try {
+            await saveNote(cornellNote); 
+            successCount++;
+        } catch (error) {
+            console.error('Error saving Cornell note:', cornellNote, error);
+            errorCount++;
+        }
+    }
+
+    closeImportCornellModal();
+    loadNotes(); 
+    if (successCount > 0) {
+        alert(`Successfully imported ${successCount} Cornell note(s).`);
+    }
+    if (errorCount > 0) {
+        alert(`Failed to import ${errorCount} Cornell note(s) due to missing data or errors. Check console for details.`);
+    }
+});
+
+document.getElementById('cancelImportCornellNotesBtn').addEventListener('click', closeImportCornellModal);
+
 async function loadNotes() {
     try {
         const notes = await getAllNotes();
@@ -349,7 +504,7 @@ function displayNotes(notes) {
         container.appendChild(noteElement);
     });
 
-    // Add drag and drop functionality
+    
     addDragAndDropListeners();
 }
 
@@ -360,7 +515,7 @@ function createNoteElement(note) {
     div.dataset.noteId = note.id;
     div.dataset.noteType = note.type;
 
-    // Color coding by type
+    
     const typeColors = {
         normal: 'border-l-4 border-blue-400',
         cornell: 'border-l-4 border-green-400',
@@ -373,67 +528,67 @@ function createNoteElement(note) {
 
     if (note.type === 'normal') {
         contentHtml = `
-                    <div class="mt-3">
-                        <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
-                    </div>
-                `;
+            <div class="mt-3">
+                <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
+            </div>
+        `;
     } else if (note.type === 'cornell') {
         contentHtml = `
-                    <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
-                        <div class="bg-purple-50 p-2 rounded">
-                            <strong>Cue:</strong>
-                            <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
-                        </div>
-                        <div class="col-span-2 bg-blue-50 p-2 rounded">
-                            <strong>Notes:</strong>
-                            <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
-                        </div>
-                    </div>
-                `;
+            <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+                <div class="bg-purple-50 p-2 rounded">
+                    <strong>Cue:</strong>
+                    <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
+                </div>
+                <div class="col-span-2 bg-blue-50 p-2 rounded">
+                    <strong>Notes:</strong>
+                    <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
+                </div>
+            </div>
+        `;
     } else if (note.type === 'flashcard') {
         contentHtml = `
-                    <div class="mt-3 flashcard" onclick="flipCard(this)">
-                        <div class="flashcard-inner">
-                            <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200 p-2 rounded flex items-center justify-center min-h-[80px]">
-                                <p class="text-center font-medium">${note.content.front}</p>
-                            </div>
-                            <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300 p-2 rounded flex items-center justify-center min-h-[80px]">
-                                <p class="text-center">${note.content.back}</p>
-                            </div>
-                        </div>
+            <div class="mt-3 flashcard" onclick="flipCard(this)">
+                <div class="flashcard-inner">
+                    <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200 p-2 rounded flex items-center justify-center min-h-[80px]">
+                        <p class="text-center font-medium">${note.content.front}</p>
                     </div>
-                `;
+                    <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300 p-2 rounded flex items-center justify-center min-h-[80px]">
+                        <p class="text-center">${note.content.back}</p>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     div.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
-                        <div class="flex gap-1 ml-2">
-                        <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
-                        <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
-                    </div>
-                </div>
-                <div class="flex gap-1 mb-2">
-                    <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
-                    ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
-                </div>
-                <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
-                    ${contentHtml}
-                </div>
-                <div class="mt-3 text-xs text-gray-500">
-                    ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
-                </div>
-            `;
+        <div class="flex justify-between items-start mb-2">
+            <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
+                <div class="flex gap-1 ml-2">
+                <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
+                <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
+            </div>
+        </div>
+        <div class="flex gap-1 mb-2">
+            <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
+            ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
+        </div>
+        <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
+            ${contentHtml}
+        </div>
+        <div class="mt-3 text-xs text-gray-500">
+            ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
+        </div>
+    `;
 
-            return div;
+    return div;
 }
 
-// Flashcard flip functionality
+
 function flipCard(element) {
     element.classList.toggle('flipped');
 }
 
-// Delete functionality
+
 async function confirmDelete(id) {
     if (confirm('Are you sure you want to delete this note?')) {
         try {
@@ -446,7 +601,7 @@ async function confirmDelete(id) {
     }
 }
 
-// Search and filter functionality
+
 document.getElementById('searchInput').addEventListener('input', filterNotes);
 document.getElementById('tagFilter').addEventListener('input', filterNotes);
 
@@ -473,7 +628,7 @@ async function filterNotes() {
     }
 }
 
-// Drag and drop functionality
+
 function addDragAndDropListeners() {
     const noteCards = document.querySelectorAll('.note-card');
 
@@ -553,8 +708,27 @@ function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// Event listener for the "Import Flashcards" button
-document.getElementById('importFlashcardsBtn').addEventListener('click', showImportFlashcardsModal);
 
-// Initialize the app
+
+document.getElementById('createNoteSelect').addEventListener('change', function() {
+    const selectedType = this.value;
+    if (selectedType) {
+        showCreateModal(selectedType);
+        this.value = ""; 
+    }
+});
+
+document.getElementById('importSelect').addEventListener('change', function() {
+    const selectedOption = this.value;
+    if (selectedOption === 'flashcards') {
+        showImportFlashcardsModal();
+    } else if (selectedOption === 'normal') { 
+        showImportNotesModal();
+    } else if (selectedOption === 'cornell') { 
+        showImportCornellModal();
+    }
+    this.value = ""; 
+});
+
+
 initDB();
