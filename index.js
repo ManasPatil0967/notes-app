@@ -4,6 +4,18 @@ const dbVersion = 1;
 let currentEditingId = null;
 let currentNoteType = 'normal';
 
+// --- Flashcard Review Modal Logic ---
+let reviewFlashcards = [];
+let currentReviewIndex = 0;
+let isReviewFlipped = false;
+
+// Utility: Convert markdown image syntax to <img> tags
+function renderImages(text) {
+    if (!text) return '';
+    // Convert markdown images ![alt](url)
+    text = text.replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '<img src="$2" alt="$1" class="inline-block max-h-32 my-2 rounded shadow" />');
+    return text;
+}
 
 function initDB() {
     const request = indexedDB.open(dbName, dbVersion);
@@ -915,3 +927,70 @@ document.getElementById('importSelect').addEventListener('change', function() {
 
 
 initDB();
+
+function showFlashcardReviewModal(flashcards) {
+    reviewFlashcards = flashcards;
+    currentReviewIndex = 0;
+    isReviewFlipped = false;
+    renderReviewFlashcard();
+    document.getElementById('flashcardReviewModal').classList.remove('hidden');
+}
+
+function closeFlashcardReviewModal() {
+    document.getElementById('flashcardReviewModal').classList.add('hidden');
+}
+
+function renderReviewFlashcard() {
+    const container = document.getElementById('flashcardReviewContent');
+    if (!reviewFlashcards.length) {
+        container.innerHTML = '<div class="text-gray-500">No flashcards found for this tag.</div>';
+        document.getElementById('flipReviewFlashcardBtn').style.display = 'none';
+        document.getElementById('prevFlashcardBtn').style.visibility = 'hidden';
+        document.getElementById('nextFlashcardBtn').style.visibility = 'hidden';
+        return;
+    }
+    const card = reviewFlashcards[currentReviewIndex];
+    document.getElementById('flipReviewFlashcardBtn').style.display = '';
+    document.getElementById('prevFlashcardBtn').style.visibility = reviewFlashcards.length > 1 ? '' : 'hidden';
+    document.getElementById('nextFlashcardBtn').style.visibility = reviewFlashcards.length > 1 ? '' : 'hidden';
+    container.innerHTML = `
+        <div class="w-full">
+            <div class="flashcard ${isReviewFlipped ? 'flipped' : ''}" style="height:180px;">
+                <div class="flashcard-inner" style="height:180px;">
+                    <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200 p-2 rounded flex items-center justify-center min-h-[80px]">
+                        <p class="text-center font-medium">${renderImages(card.content.front)}</p>
+                    </div>
+                    <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300 p-2 rounded flex items-center justify-center min-h-[80px]">
+                        <p class="text-center">${renderImages(card.content.back)}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-2 text-xs text-gray-400">${currentReviewIndex + 1} / ${reviewFlashcards.length}</div>
+        </div>
+    `;
+}
+
+document.getElementById('reviewFlashcardsBtn').onclick = async function() {
+    const tag = document.getElementById('tagFilter').value.trim().toLowerCase();
+    const allNotes = await getAllNotes();
+    const flashcards = allNotes.filter(note => note.type === 'flashcard' && (!tag || note.tags.some(t => t.toLowerCase().includes(tag))));
+    showFlashcardReviewModal(flashcards);
+};
+
+document.getElementById('closeFlashcardReviewModal').onclick = closeFlashcardReviewModal;
+document.getElementById('prevFlashcardBtn').onclick = function() {
+    if (!reviewFlashcards.length) return;
+    currentReviewIndex = (currentReviewIndex - 1 + reviewFlashcards.length) % reviewFlashcards.length;
+    isReviewFlipped = false;
+    renderReviewFlashcard();
+};
+document.getElementById('nextFlashcardBtn').onclick = function() {
+    if (!reviewFlashcards.length) return;
+    currentReviewIndex = (currentReviewIndex + 1) % reviewFlashcards.length;
+    isReviewFlipped = false;
+    renderReviewFlashcard();
+};
+document.getElementById('flipReviewFlashcardBtn').onclick = function() {
+    isReviewFlipped = !isReviewFlipped;
+    renderReviewFlashcard();
+};
