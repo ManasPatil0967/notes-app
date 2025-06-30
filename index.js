@@ -258,13 +258,17 @@ document.getElementById('cornellNoteForm').onsubmit = async function(e) {
         type: 'cornell',
         title,
         tags,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         content: {
             qa: qaPairs,
             summary
-        }
+        },
+        updatedAt: new Date().toISOString()
     };
+    if (currentEditingId) {
+        note.id = currentEditingId;
+    } else {
+        note.createdAt = new Date().toISOString();
+    }
     await saveNote(note);
     closeCornellNoteModal();
     loadNotes();
@@ -297,22 +301,34 @@ function showEditModal(note) {
     currentEditingId = note.id;
     document.getElementById('modalTitle').textContent = `Edit ${note.type.charAt(0).toUpperCase() + note.type.slice(1)} Note`;
 
-    
     document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
 
-    
-    document.getElementById(note.type + 'Content').classList.remove('hidden');
+    if (note.type === 'cornell') {
+        document.getElementById('cornellNoteForm').reset();
+        const qaContainer = document.getElementById('cornellQAPairs');
+        qaContainer.innerHTML = '';
+        document.getElementById('cornellSummary').value = '';
+        document.getElementById('cornellNoteTitle').value = '';
+        document.getElementById('cornellNoteTags').value = '';
+        document.getElementById('cornellModalTitle').textContent = 'Edit Cornell Note';
+        document.getElementById('cornellNoteTitle').value = note.title;
+        document.getElementById('cornellNoteTags').value = note.tags.join(', ');
+        if (note.content && Array.isArray(note.content.qa)) {
+            for (const pair of note.content.qa) {
+                addQAPair(pair.question, pair.answer);
+            }
+        }
+        document.getElementById('cornellSummary').value = note.content.summary || '';
+        document.getElementById('cornellNoteModal').classList.remove('hidden');
+        return;
+    }
 
-    
+    document.getElementById(note.type + 'Content').classList.remove('hidden');
     document.getElementById('noteTitle').value = note.title;
     document.getElementById('noteTags').value = note.tags.join(', ');
 
     if (note.type === 'normal') {
         document.getElementById('normalText').value = note.content.text;
-    } else if (note.type === 'cornell') {
-        document.getElementById('cornellCue').value = note.content.cue;
-        document.getElementById('cornellNotes').value = note.content.notes;
-        document.getElementById('cornellSummary').value = note.content.summary;
     } else if (note.type === 'flashcard') {
         document.getElementById('flashcardFront').value = note.content.front;
         document.getElementById('flashcardBack').value = note.content.back;
@@ -698,6 +714,7 @@ function createNoteElement(note) {
     div.draggable = true;
     div.dataset.noteId = note.id;
     div.dataset.noteType = note.type;
+    div.dataset.noteJson = encodeURIComponent(JSON.stringify(note));
 
     
     const typeColors = {
@@ -757,9 +774,9 @@ function createNoteElement(note) {
 
     div.innerHTML = `
         <div class="flex justify-between items-start mb-2">
-            <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600" onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' title="Click to view full note">${note.title}</h3>
+            <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600 view-note-trigger" title="Click to view full note">${note.title}</h3>
                 <div class="flex gap-1 ml-2">
-                <button onclick='showEditModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="text-blue-500 hover:text-blue-700 text-sm" title="Edit note">✎</button>
+                <button class="text-blue-500 hover:text-blue-700 text-sm edit-note-trigger" title="Edit note">✎</button>
                 <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
             </div>
         </div>
@@ -767,7 +784,7 @@ function createNoteElement(note) {
             <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
             ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
         </div>
-        <div onclick='showViewModal(${JSON.stringify(note).replace(/'/g, "\\'")})' class="cursor-pointer">
+        <div class="cursor-pointer view-note-trigger">
             ${contentHtml}
         </div>
         <div class="mt-3 text-xs text-gray-500">
@@ -775,6 +792,19 @@ function createNoteElement(note) {
         </div>
     `;
 
+    // Add event listeners for view and edit
+    div.querySelectorAll('.view-note-trigger').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const noteObj = JSON.parse(decodeURIComponent(div.dataset.noteJson));
+            showViewModal(noteObj);
+        });
+    });
+    div.querySelector('.edit-note-trigger').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const noteObj = JSON.parse(decodeURIComponent(div.dataset.noteJson));
+        showEditModal(noteObj);
+    });
     return div;
 }
 
