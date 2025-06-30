@@ -59,3 +59,12 @@
     /* Styles for the back of the flashcard */
     transform: rotateY(180deg);
 }
+
+.cornell-summary-preview {
+    display: block;
+    max-height: 3.5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre-line;
+    word-break: break-word;
+}

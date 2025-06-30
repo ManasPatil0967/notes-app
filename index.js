@@ -751,7 +751,7 @@ function createNoteElement(note) {
                 `;
             });
             if (note.content.summary) {
-                contentHtml += `<div class='bg-green-50 p-2 rounded'><strong>Summary:</strong> <span class='text-gray-600'>${note.content.summary.substring(0, 100)}${note.content.summary.length > 100 ? '...' : ''}</span></div>`;
+                contentHtml += `<div class='bg-green-50 p-2 rounded'><strong>Summary:</strong> <span class='text-gray-600 cornell-summary-preview'>${note.content.summary}</span></div>`;
             }
             contentHtml += `</div>`;
         } else {
@@ -831,18 +831,18 @@ document.getElementById('searchInput').addEventListener('input', filterNotes);
 document.getElementById('tagFilter').addEventListener('input', filterNotes);
 
 async function filterNotes() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const tagFilter = document.getElementById('tagFilter').value.toLowerCase();
+    const searchTerm = document.getElementById('searchInput').value.toLocaleLowerCase();
+    const tagFilter = document.getElementById('tagFilter').value.toLocaleLowerCase();
 
     try {
         const allNotes = await getAllNotes();
         const filteredNotes = allNotes.filter(note => {
             const matchesSearch = !searchTerm ||
-                note.title.toLowerCase().includes(searchTerm) ||
-                JSON.stringify(note.content).toLowerCase().includes(searchTerm);
+                note.title.toLocaleLowerCase().includes(searchTerm) ||
+                JSON.stringify(note.content).toLocaleLowerCase().includes(searchTerm);
 
             const matchesTag = !tagFilter ||
-                note.tags.some(tag => tag.toLowerCase().includes(tagFilter));
+                note.tags.some(tag => tag.toLocaleLowerCase().includes(tagFilter));
 
             return matchesSearch && matchesTag;
         });
@@ -1001,9 +1001,9 @@ function renderReviewFlashcard() {
 }
 
 document.getElementById('reviewFlashcardsBtn').onclick = async function() {
-    const tag = document.getElementById('tagFilter').value.trim().toLowerCase();
+    const tag = document.getElementById('tagFilter').value.trim().toLocaleLowerCase();
     const allNotes = await getAllNotes();
-    const flashcards = allNotes.filter(note => note.type === 'flashcard' && (!tag || note.tags.some(t => t.toLowerCase().includes(tag))));
+    const flashcards = allNotes.filter(note => note.type === 'flashcard' && (!tag || note.tags.some(t => t.toLocaleLowerCase().includes(tag))));
     showFlashcardReviewModal(flashcards);
 };
 
