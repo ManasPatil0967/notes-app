@@ -105,22 +105,32 @@ function showViewModal(note) {
             </div>
         `;
     } else if (note.type === 'cornell') {
-        contentHtml += `
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div class="bg-purple-50 p-4 rounded-lg">
-                    <h3 class="font-semibold text-purple-800 mb-2">Cue Column:</h3>
-                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.cue}</div>
-                </div>
-                <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold text-blue-800 mb-2">Note-taking Area:</h3>
-                    <div class="text-gray-700 whitespace-pre-wrap">${note.content.notes}</div>
-                </div>
-            </div>
-            <div class="bg-green-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
-                <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
-            </div>
-        `;
+        if (Array.isArray(note.content.qa)) {
+            note.content.qa.forEach((pair, idx) => {
+                contentHtml += `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-purple-800 mb-2">Q${idx + 1}:</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${pair.question}</div>
+                        </div>
+                        <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-blue-800 mb-2">A${idx + 1}:</h3>
+                            <div class="text-gray-700 whitespace-pre-wrap">${pair.answer}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            if (note.content.summary) {
+                contentHtml += `
+                    <div class="bg-green-50 p-4 rounded-lg mt-2">
+                        <h3 class="font-semibold text-green-800 mb-2">Summary:</h3>
+                        <div class="text-gray-700 whitespace-pre-wrap">${note.content.summary}</div>
+                    </div>
+                `;
+            }
+        } else {
+            contentHtml += `<div class='mt-3 text-gray-500'>No Q&A pairs found.</div>`;
+        }
     } else if (note.type === 'flashcard') {
         contentHtml += `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,21 +171,113 @@ function closeViewModal() {
 }
 
 
+function showCornellNoteModal(editNote = null) {
+    document.getElementById('cornellModalTitle').textContent = editNote ? 'Edit Cornell Note' : 'Create Cornell Note';
+    document.getElementById('cornellNoteForm').reset();
+    const qaContainer = document.getElementById('cornellQAPairs');
+    qaContainer.innerHTML = '';
+    document.getElementById('cornellSummary').value = '';
+    document.getElementById('cornellNoteTitle').value = '';
+    document.getElementById('cornellNoteTags').value = '';
+
+    if (editNote) {
+        document.getElementById('cornellNoteTitle').value = editNote.title;
+        document.getElementById('cornellNoteTags').value = editNote.tags.join(', ');
+        if (editNote.content && Array.isArray(editNote.content.qa)) {
+            for (const pair of editNote.content.qa) {
+                addQAPair(pair.question, pair.answer);
+            }
+        }
+        document.getElementById('cornellSummary').value = editNote.content.summary || '';
+    } else {
+        addQAPair();
+    }
+    document.getElementById('cornellNoteModal').classList.remove('hidden');
+}
+
+function closeCornellNoteModal() {
+    document.getElementById('cornellNoteModal').classList.add('hidden');
+}
+
+function addQAPair(question = '', answer = '') {
+    const qaContainer = document.getElementById('cornellQAPairs');
+    const pairDiv = document.createElement('div');
+    pairDiv.className = 'flex gap-2 items-start';
+    pairDiv.innerHTML = `
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Question</label>
+            <textarea class="cornellQAQuestion w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" rows="2" placeholder="Cue/question...">${question}</textarea>
+        </div>
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+            <textarea class="cornellQAAnswer w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" rows="2" placeholder="Answer/notes...">${answer}</textarea>
+        </div>
+        <button type="button" class="removeQAPairBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded mt-6">Remove</button>
+    `;
+    qaContainer.appendChild(pairDiv);
+    pairDiv.querySelector('.removeQAPairBtn').onclick = function() {
+        qaContainer.removeChild(pairDiv);
+    };
+}
+
+document.getElementById('addQAPairBtn').onclick = function() {
+    addQAPair();
+};
+
+document.getElementById('cornellNoteForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const title = document.getElementById('cornellNoteTitle').value.trim();
+    const tags = document.getElementById('cornellNoteTags').value.split(',').map(t => t.trim()).filter(t => t);
+    const summary = document.getElementById('cornellSummary').value.trim();
+    const qaPairs = [];
+    const qaContainer = document.getElementById('cornellQAPairs');
+    const questions = qaContainer.querySelectorAll('.cornellQAQuestion');
+    const answers = qaContainer.querySelectorAll('.cornellQAAnswer');
+    for (let i = 0; i < questions.length; i++) {
+        const q = questions[i].value.trim();
+        const a = answers[i].value.trim();
+        if (q && a) qaPairs.push({ question: q, answer: a });
+    }
+    if (!title || qaPairs.length === 0) {
+        alert('Title and at least one Q&A pair are required.');
+        return;
+    }
+    const note = {
+        type: 'cornell',
+        title,
+        tags,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        content: {
+            qa: qaPairs,
+            summary
+        }
+    };
+    await saveNote(note);
+    closeCornellNoteModal();
+    loadNotes();
+};
+
+
 function showCreateModal(type) {
-    currentNoteType = type;
-    currentEditingId = null;
-    document.getElementById('modalTitle').textContent = `Create ${type.charAt(0).toUpperCase() + type.slice(1)} Note`;
+    if (type === 'cornell') {
+        showCornellNoteModal();
+    } else {
+        currentNoteType = type;
+        currentEditingId = null;
+        document.getElementById('modalTitle').textContent = `Create ${type.charAt(0).toUpperCase() + type.slice(1)} Note`;
 
-    
-    document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
+        
+        document.querySelectorAll('.note-content').forEach(el => el.classList.add('hidden'));
 
-    
-    document.getElementById(type + 'Content').classList.remove('hidden');
+        
+        document.getElementById(type + 'Content').classList.remove('hidden');
 
-    
-    document.getElementById('noteForm').reset();
+        
+        document.getElementById('noteForm').reset();
 
-    document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('modal').classList.remove('hidden');
+    }
 }
 
 function showEditModal(note) {
@@ -362,31 +464,54 @@ document.getElementById('cancelImportFlashcardsBtn').addEventListener('click', c
 
 document.getElementById('submitImportNotesBtn').addEventListener('click', async function() {
     const inputText = document.getElementById('noteImportTextarea').value;
-    const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const lines = inputText.split('\n');
 
     const notesToSave = [];
-    let currentNote = {};
+    let currentNote = null;
+    let currentField = null;
+    let buffer = [];
+
+    function flushField() {
+        if (currentNote && currentField === 'C') {
+            currentNote.content.text = buffer.join('\n').trim();
+        }
+        buffer = [];
+        currentField = null;
+    }
 
     for (const line of lines) {
-        if (line.startsWith('N:')) {
-            if (Object.keys(currentNote).length > 0) {
+        if (line.trim().startsWith('N:')) {
+            if (currentNote) {
+                flushField();
                 notesToSave.push(currentNote);
             }
             currentNote = {
-                type: 'normal', 
+                type: 'normal',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 tags: [],
-                content: {} 
+                content: {}
             };
             currentNote.title = line.substring(2).trim();
-        } else if (line.startsWith('T:')) {
-            currentNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
-        } else if (line.startsWith('C:')) {
-            currentNote.content.text = line.substring(2).trim(); 
+            currentField = null;
+            buffer = [];
+        } else if (line.trim().startsWith('T:')) {
+            flushField();
+            if (currentNote) {
+                currentNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+        } else if (line.trim().startsWith('C:')) {
+            flushField();
+            currentField = 'C';
+            buffer.push(line.substring(2).trim());
+        } else {
+            if (currentField) {
+                buffer.push(line);
+            }
         }
     }
-    if (Object.keys(currentNote).length > 0) {
+    if (currentNote) {
+        flushField();
         notesToSave.push(currentNote);
     }
 
@@ -394,7 +519,6 @@ document.getElementById('submitImportNotesBtn').addEventListener('click', async 
     let errorCount = 0;
 
     for (const note of notesToSave) {
-        
         if (!note.title || !note.content || !note.content.text) {
             console.warn('Skipping incomplete normal note:', note);
             errorCount++;
@@ -410,7 +534,7 @@ document.getElementById('submitImportNotesBtn').addEventListener('click', async 
     }
 
     closeImportNotesModal();
-    loadNotes(); 
+    loadNotes();
     if (successCount > 0) {
         alert(`Successfully imported ${successCount} normal note(s).`);
     }
@@ -423,14 +547,41 @@ document.getElementById('cancelImportNotesBtn').addEventListener('click', closeI
 
 document.getElementById('submitImportCornellNotesBtn').addEventListener('click', async function() {
     const inputText = document.getElementById('cornellNoteImportTextarea').value;
-    const lines = inputText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const lines = inputText.split('\n');
 
     const cornellNotesToSave = [];
-    let currentCornellNote = {};
+    let currentCornellNote = null;
+    let currentField = null;
+    let buffer = [];
+    let qaPairs = [];
+    let currentQA = null;
+
+    function flushCornellField() {
+        if (!currentCornellNote) return;
+        if (currentField === 'Q') {
+            if (currentQA) {
+                currentQA.question = buffer.join('\n').trim();
+            }
+        } else if (currentField === 'A' || currentField === 'M') {
+            if (currentQA) {
+                currentQA.answer = buffer.join('\n').trim();
+                qaPairs.push(currentQA);
+                currentQA = null;
+            }
+        } else if (currentField === 'S') {
+            currentCornellNote.content.summary = buffer.join('\n').trim();
+        }
+        buffer = [];
+        currentField = null;
+    }
 
     for (const line of lines) {
-        if (line.startsWith('N:')) {
-            if (Object.keys(currentCornellNote).length > 0) {
+        if (line.trim().startsWith('N:')) {
+            if (currentCornellNote) {
+                flushCornellField();
+                if (qaPairs.length > 0) {
+                    currentCornellNote.content.qa = qaPairs;
+                }
                 cornellNotesToSave.push(currentCornellNote);
             }
             currentCornellNote = {
@@ -438,20 +589,42 @@ document.getElementById('submitImportCornellNotesBtn').addEventListener('click',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 tags: [],
-                content: {} 
+                content: {}
             };
+            qaPairs = [];
+            currentQA = null;
+            currentField = null;
+            buffer = [];
             currentCornellNote.title = line.substring(2).trim();
-        } else if (line.startsWith('T:')) {
-            currentCornellNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
-        } else if (line.startsWith('Q:')) { 
-            currentCornellNote.content.cue = line.substring(2).trim();
-        } else if (line.startsWith('M:')) { 
-            currentCornellNote.content.notes = line.substring(2).trim();
-        } else if (line.startsWith('S:')) { 
-            currentCornellNote.content.summary = line.substring(2).trim();
+        } else if (line.trim().startsWith('T:')) {
+            flushCornellField();
+            if (currentCornellNote) {
+                currentCornellNote.tags = line.substring(2).split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+        } else if (line.trim().startsWith('Q:')) {
+            flushCornellField();
+            currentField = 'Q';
+            currentQA = { question: '', answer: '' };
+            buffer.push(line.substring(2).trim());
+        } else if (line.trim().startsWith('A:') || line.trim().startsWith('M:')) {
+            flushCornellField();
+            currentField = 'A';
+            buffer.push(line.substring(2).trim());
+        } else if (line.trim().startsWith('S:')) {
+            flushCornellField();
+            currentField = 'S';
+            buffer.push(line.substring(2).trim());
+        } else {
+            if (currentField) {
+                buffer.push(line);
+            }
         }
     }
-    if (Object.keys(currentCornellNote).length > 0) {
+    if (currentCornellNote) {
+        flushCornellField();
+        if (qaPairs.length > 0) {
+            currentCornellNote.content.qa = qaPairs;
+        }
         cornellNotesToSave.push(currentCornellNote);
     }
 
@@ -459,14 +632,13 @@ document.getElementById('submitImportCornellNotesBtn').addEventListener('click',
     let errorCount = 0;
 
     for (const cornellNote of cornellNotesToSave) {
-        
-        if (!cornellNote.title || !cornellNote.content || !cornellNote.content.cue || !cornellNote.content.notes || !cornellNote.content.summary) {
+        if (!cornellNote.title || !cornellNote.content || !cornellNote.content.qa || cornellNote.content.qa.length === 0) {
             console.warn('Skipping incomplete Cornell note:', cornellNote);
             errorCount++;
             continue;
         }
         try {
-            await saveNote(cornellNote); 
+            await saveNote(cornellNote);
             successCount++;
         } catch (error) {
             console.error('Error saving Cornell note:', cornellNote, error);
@@ -475,7 +647,7 @@ document.getElementById('submitImportCornellNotesBtn').addEventListener('click',
     }
 
     closeImportCornellModal();
-    loadNotes(); 
+    loadNotes();
     if (successCount > 0) {
         alert(`Successfully imported ${successCount} Cornell note(s).`);
     }
@@ -533,18 +705,29 @@ function createNoteElement(note) {
             </div>
         `;
     } else if (note.type === 'cornell') {
-        contentHtml = `
-            <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
-                <div class="bg-purple-50 p-2 rounded">
-                    <strong>Cue:</strong>
-                    <p class="text-gray-600">${note.content.cue.substring(0, 50)}${note.content.cue.length > 50 ? '...' : ''}</p>
-                </div>
-                <div class="col-span-2 bg-blue-50 p-2 rounded">
-                    <strong>Notes:</strong>
-                    <p class="text-gray-600">${note.content.notes.substring(0, 100)}${note.content.notes.length > 100 ? '...' : ''}</p>
-                </div>
-            </div>
-        `;
+        if (Array.isArray(note.content.qa)) {
+            contentHtml = `<div class='mt-3 space-y-2'>`;
+            note.content.qa.forEach((pair, idx) => {
+                contentHtml += `
+                    <div class="grid grid-cols-3 gap-2 text-sm">
+                        <div class="bg-purple-50 p-2 rounded">
+                            <strong>Q${idx + 1}:</strong>
+                            <p class="text-gray-600">${pair.question.substring(0, 50)}${pair.question.length > 50 ? '...' : ''}</p>
+                        </div>
+                        <div class="col-span-2 bg-blue-50 p-2 rounded">
+                            <strong>A${idx + 1}:</strong>
+                            <p class="text-gray-600">${pair.answer.substring(0, 100)}${pair.answer.length > 100 ? '...' : ''}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            if (note.content.summary) {
+                contentHtml += `<div class='bg-green-50 p-2 rounded'><strong>Summary:</strong> <span class='text-gray-600'>${note.content.summary.substring(0, 100)}${note.content.summary.length > 100 ? '...' : ''}</span></div>`;
+            }
+            contentHtml += `</div>`;
+        } else {
+            contentHtml = `<div class='mt-3 text-gray-500'>No Q&A pairs found.</div>`;
+        }
     } else if (note.type === 'flashcard') {
         contentHtml = `
             <div class="mt-3 flashcard" onclick="flipCard(this)">

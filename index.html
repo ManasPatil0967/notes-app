@@ -184,12 +184,14 @@ C: This is the content of my first note.
                 <button onclick="closeImportCornellNotesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <div class="p-6">
-                <p class="text-gray-700 mb-4">Enter Cornell note data in the following format. Each note starts with "N:".</p>
+                <p class="text-gray-700 mb-4">Enter Cornell note data in the following format. Each note starts with "N:". You can have multiple Q/A pairs per note.</p>
                 <pre class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-4">
 N: My First Cornell Note
 T: study, notes
-Q: This is the content of my first Cornell note. (Cue)
-M: Detailed notes from the lecture. (Main Notes Area)
+Q: What is the capital of France?
+A: Paris
+Q: What is 2+2?
+A: 4
 S: Summary of key concepts.
                 </pre>
                 <textarea id="cornellNoteImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter Cornell note data here..."></textarea>
@@ -201,6 +203,40 @@ S: Summary of key concepts.
                 <button type="button" id="cancelImportCornellNotesBtn" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     Cancel
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cornell Note Modal for Creating/Editing -->
+    <div id="cornellNoteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="cornellModalTitle" class="text-2xl font-bold text-gray-800">Create Cornell Note</h2>
+                    <button onclick="closeCornellNoteModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                <form id="cornellNoteForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="cornellNoteTitle" placeholder="Note Title" required class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <input type="text" id="cornellNoteTags" placeholder="Tags (comma separated)" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    </div>
+                    <div id="cornellQAPairs" class="space-y-4">
+                        <!-- Q&A pairs will be inserted here -->
+                    </div>
+                    <button type="button" id="addQAPairBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Add Q&A Pair</button>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                        <textarea id="cornellSummary" placeholder="Summary of key concepts..." rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                    </div>
+                    <div class="flex gap-2 pt-4">
+                        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+                            Save Note
+                        </button>
+                        <button type="button" onclick="closeCornellNoteModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
