@@ -956,8 +956,6 @@ document.getElementById('importSelect').addEventListener('change', function() {
 });
 
 
-initDB();
-
 function showFlashcardReviewModal(flashcards) {
     reviewFlashcards = flashcards;
     currentReviewIndex = 0;
@@ -1024,3 +1022,6 @@ document.getElementById('flipReviewFlashcardBtn').onclick = function() {
     isReviewFlipped = !isReviewFlipped;
     renderReviewFlashcard();
 };
+
+initDB();
+
