@@ -8,58 +8,54 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
-    <div class="container mx-auto p-6">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex flex-wrap gap-4 items-center justify-between">
-                <div class="flex gap-2">
-                    <select id="createNoteSelect" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
-                        <option value="">Create Note</option>
-                        <option value="normal">Normal Note</option>
-                        <option value="cornell">Cornell Note</option>
-                        <option value="flashcard">Flashcard</option>
-                    </select>
-
-                    <select id="importSelect" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
-                        <option value="">Import Note</option>
-                        <option value="normal">Import Notes</option> <option value="cornell">Import Cornell Notes</option>
-                        <option value="flashcards">Import Flashcards</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <input type="text" id="searchInput" placeholder="Search notes..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <input type="text" id="tagFilter" placeholder="Filter by tag..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <button id="reviewFlashcardsBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">Review Flashcards</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+  <div class="container mx-auto p-6">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-purple-800 mb-2">My Notes</h1>
     </div>
 
-    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="viewModalTitle" class="text-2xl font-bold text-gray-800">View Note</h2>
-                    <button onclick="closeViewModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-                </div>
-                
-                <div id="viewModalContent" class="space-y-4">
-                    </div>
-                
-                <div class="flex gap-2 pt-4">
-                    <button id="editFromViewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
-                        Edit Note
-                    </button>
-                    <button onclick="closeViewModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
-                        Close
-                    </button>
-                </div>
+    <!-- Controls -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex gap-2">
+          <select id="createNoteSelect" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
+            <option value="">Create Note</option>
+            <option value="normal">Normal Note</option>
+            <option value="cornell">Cornell Note</option>
+            <option value="flashcard">Flashcard</option>
+          </select>
+
+          <select id="importSelect" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 appearance-none cursor-pointer">
+            <option value="">Import Note</option>
+            <option value="normal">Import Notes</option>
+            <option value="cornell">Import Cornell Notes</option>
+            <option value="flashcards">Import Flashcards</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="searchInput" placeholder="Search notes..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" />
+          <input type="text" id="tagFilter" placeholder="Filter by tag..." class="px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" />
+          <button id="reviewFlashcardsBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">Review Flashcards</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Container -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="notesContainer">
+      <!-- Notes will be rendered here -->
+    </div>
+  </div>
+
+     <!-- Preview Pane -->
+    <div id="notePreviewPane" class="fixed top-0 right-0 h-full bg-white shadow-lg z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto resize-x max-w-full md:max-w-[50%] min-w-[300px]">
+        <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
+            <h2 id="previewTitle" class="text-xl font-bold text-purple-800">Note Title</h2>
+            <button onclick="closePreviewPane()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="p-4 space-y-2">
+            <p class="text-sm text-gray-600" id="previewTags">Tags: ...</p>
+            <div id="previewContent" class="text-gray-800 whitespace-pre-wrap"></div>
+            <div class="flex gap-2 pt-4">
+                <button id="editFromPreviewBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Edit</button>
             </div>
         </div>
     </div>
@@ -139,7 +135,7 @@ T: history, dates
 Q: What year did WWII end?
 A: 1945
                 </pre>
-                <textarea id="flashcardImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter flashcard data here..."></textarea>
+                <textarea id="flashcardImportTextarea" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter flashcard data here..."></textarea>
             </div>
             <div class="flex justify-end p-4 border-t">
                 <button id="submitImportFlashcardsBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
@@ -165,7 +161,7 @@ N: My First Note
 T: personal, ideas
 C: This is the content of my first note.
                 </pre>
-                <textarea id="noteImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter note data here..."></textarea>
+                <textarea id="noteImportTextarea" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter note data here..."></textarea>
             </div>
             <div class="flex justify-end p-4 border-t">
                 <button id="submitImportNotesBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
@@ -195,7 +191,7 @@ Q: What is 2+2?
 A: 4
 S: Summary of key concepts.
                 </pre>
-                <textarea id="cornellNoteImportTextarea" rows="15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter Cornell note data here..."></textarea>
+                <textarea id="cornellNoteImportTextarea" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter Cornell note data here..."></textarea>
             </div>
             <div class="flex justify-end p-4 border-t">
                 <button id="submitImportCornellNotesBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
@@ -259,6 +255,35 @@ S: Summary of key concepts.
         </div>
     </div>
 
-    <script src="index.js"></script>
+ <script src="index.js"></script>
+  <script>
+    // Hook into existing logic and add preview pane behavior
+    function openPreviewPane(note) {
+      document.getElementById("previewTitle").textContent = note.title;
+      document.getElementById("previewTags").textContent = `Tags: ${note.tags.join(", ")}`;
+      const previewContent = document.getElementById("previewContent");
+      if (note.type === 'normal') {
+        previewContent.innerHTML = `<p>${note.content.text.substring(0, 500)}</p>`;
+      } else if (note.type === 'cornell') {
+        previewContent.innerHTML = note.content.qa.map((q, i) => `<div class='mb-2'><strong>Q${i+1}:</strong> ${q.question}<br/><strong>A${i+1}:</strong> ${q.answer}</div>`).join('') + `<div class='mt-2 text-sm text-gray-600'><strong>Summary:</strong> ${note.content.summary || ''}</div>`;
+      } else if (note.type === 'flashcard') {
+        previewContent.innerHTML = `<div class='mb-2'><strong>Front:</strong> ${note.content.front}</div><div><strong>Back:</strong> ${note.content.back}</div>`;
+      }
+
+      document.getElementById("editFromPreviewBtn").onclick = function () {
+        closePreviewPane();
+        showEditModal(note);
+      };
+
+      document.getElementById("notePreviewPane").classList.add("!translate-x-0");
+    }
+
+    function closePreviewPane() {
+      document.getElementById("notePreviewPane").classList.remove("!translate-x-0");
+    }
+
+    // Attach openPreviewPane to note card render (temporary override until integrated deeper)
+    window.openPreviewPane = openPreviewPane;
+  </script>
 </body>
 </html>

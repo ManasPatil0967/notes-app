@@ -710,101 +710,57 @@ function displayNotes(notes) {
 
 function createNoteElement(note) {
     const div = document.createElement('div');
-    div.className = 'note-card bg-white rounded-lg shadow-md p-4 cursor-move';
+    div.className = 'note-card flex justify-between items-start bg-white rounded shadow-md px-4 py-3 cursor-pointer border-l-4 hover:shadow-lg transition-all';
     div.draggable = true;
     div.dataset.noteId = note.id;
     div.dataset.noteType = note.type;
     div.dataset.noteJson = encodeURIComponent(JSON.stringify(note));
 
-    
     const typeColors = {
-        normal: 'border-l-4 border-blue-400',
-        cornell: 'border-l-4 border-green-400',
-        flashcard: 'border-l-4 border-yellow-400'
+        normal: 'border-blue-400',
+        cornell: 'border-green-400',
+        flashcard: 'border-yellow-400'
     };
 
-    div.className += ' ' + typeColors[note.type];
-
-    let contentHtml = '';
-
-    if (note.type === 'normal') {
-        contentHtml = `
-            <div class="mt-3">
-                <p class="text-gray-700 whitespace-pre-wrap">${note.content.text.substring(0, 150)}${note.content.text.length > 150 ? '...' : ''}</p>
-            </div>
-        `;
-    } else if (note.type === 'cornell') {
-        if (Array.isArray(note.content.qa)) {
-            contentHtml = `<div class='mt-3 space-y-2'>`;
-            note.content.qa.forEach((pair, idx) => {
-                contentHtml += `
-                    <div class="grid grid-cols-3 gap-2 text-sm">
-                        <div class="bg-purple-50 p-2 rounded">
-                            <strong>Q${idx + 1}:</strong>
-                            <p class="text-gray-600">${pair.question.substring(0, 50)}${pair.question.length > 50 ? '...' : ''}</p>
-                        </div>
-                        <div class="col-span-2 bg-blue-50 p-2 rounded">
-                            <strong>A${idx + 1}:</strong>
-                            <p class="text-gray-600">${pair.answer.substring(0, 100)}${pair.answer.length > 100 ? '...' : ''}</p>
-                        </div>
-                    </div>
-                `;
-            });
-            if (note.content.summary) {
-                contentHtml += `<div class='bg-green-50 p-2 rounded'><strong>Summary:</strong> <span class='text-gray-600 cornell-summary-preview'>${note.content.summary}</span></div>`;
-            }
-            contentHtml += `</div>`;
-        } else {
-            contentHtml = `<div class='mt-3 text-gray-500'>No Q&A pairs found.</div>`;
-        }
-    } else if (note.type === 'flashcard') {
-        contentHtml = `
-            <div class="mt-3 flashcard" onclick="flipCard(this)">
-                <div class="flashcard-inner">
-                    <div class="flashcard-front bg-yellow-50 border-2 border-yellow-200 p-2 rounded flex items-center justify-center min-h-[80px]">
-                        <p class="text-center font-medium">${note.content.front}</p>
-                    </div>
-                    <div class="flashcard-back bg-yellow-100 border-2 border-yellow-300 p-2 rounded flex items-center justify-center min-h-[80px]">
-                        <p class="text-center">${note.content.back}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+    div.classList.add(typeColors[note.type] || 'border-gray-300');
 
     div.innerHTML = `
-        <div class="flex justify-between items-start mb-2">
-            <h3 class="font-semibold text-gray-800 truncate cursor-pointer hover:text-purple-600 view-note-trigger" title="Click to view full note">${note.title}</h3>
-                <div class="flex gap-1 ml-2">
-                <button class="text-blue-500 hover:text-blue-700 text-sm edit-note-trigger" title="Edit note">✎</button>
-                <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete note">🗑</button>
+        <div class="flex-1 pr-2 view-note-trigger">
+            <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-lg font-semibold truncate hover:underline hover:text-purple-800" title="${note.title}">
+                    ${note.title}
+                </h3>
+            </div>
+            <div class="flex gap-1 flex-wrap mb-1">
+                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
+                ${note.tags.map(tag => `
+                    <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>
+                `).join('')}
+            </div>
+            <div class="text-xs text-gray-400">
+                ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
             </div>
         </div>
-        <div class="flex gap-1 mb-2">
-            <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">${note.type}</span>
-            ${note.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">${tag}</span>`).join('')}
-        </div>
-        <div class="cursor-pointer view-note-trigger">
-            ${contentHtml}
-        </div>
-        <div class="mt-3 text-xs text-gray-500">
-            ${new Date(note.updatedAt || note.createdAt).toLocaleDateString()}
-        </div>
+                <button class="text-blue-500 hover:text-blue-700 text-sm edit-note-trigger" title="Edit">✎</button>
+                <button onclick="confirmDelete(${note.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete">🗑</button>
     `;
 
-    // Add event listeners for view and edit
+    // Preview pane trigger
     div.querySelectorAll('.view-note-trigger').forEach(el => {
-        el.addEventListener('click', function(e) {
+        el.addEventListener('click', function (e) {
             e.stopPropagation();
             const noteObj = JSON.parse(decodeURIComponent(div.dataset.noteJson));
-            showViewModal(noteObj);
+            openPreviewPane(noteObj);  // 🔄 replaces showViewModal
         });
     });
-    div.querySelector('.edit-note-trigger').addEventListener('click', function(e) {
+
+    // Edit trigger
+    div.querySelector('.edit-note-trigger').addEventListener('click', function (e) {
         e.stopPropagation();
         const noteObj = JSON.parse(decodeURIComponent(div.dataset.noteJson));
         showEditModal(noteObj);
     });
+
     return div;
 }
 
@@ -1022,6 +978,47 @@ document.getElementById('flipReviewFlashcardBtn').onclick = function() {
     isReviewFlipped = !isReviewFlipped;
     renderReviewFlashcard();
 };
+
+function openPreviewPane(note) {
+      document.getElementById("previewTitle").textContent = note.title;
+      document.getElementById("previewTags").textContent = `Tags: ${note.tags.join(", ")}`;
+      const previewContent = document.getElementById("previewContent");
+      if (note.type === 'normal') {
+        previewContent.innerHTML = `<p>${note.content.text.substring(0, 500)}</p>`;
+      } else if (note.type === 'cornell') {
+        previewContent.innerHTML = note.content.qa.map((q, i) => `<div class='mb-2'><strong>Q${i+1}:</strong> ${q.question}<br/><strong>A${i+1}:</strong> ${q.answer}</div>`).join('') + `<div class='mt-2 text-sm text-gray-600'><strong>Summary:</strong> ${note.content.summary || ''}</div>`;
+      } else if (note.type === 'flashcard') {
+        previewContent.innerHTML = `<div class='mb-2'><strong>Front:</strong> ${note.content.front}</div><div><strong>Back:</strong> ${note.content.back}</div>`;
+      }
+
+      document.getElementById("editFromPreviewBtn").onclick = function () {
+        closePreviewPane();
+        showEditModal(note);
+      };
+
+      document.getElementById("notePreviewPane").classList.add("!translate-x-0");
+    }
+
+
+function closePreviewPane() {
+      document.getElementById("notePreviewPane").classList.remove("!translate-x-0");
+      document.getElementById("previewTitle").textContent = '';
+}
+
+document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        closePreviewPane();
+        closeCornellNoteModal();
+        closeModal();
+        closeFlashcardReviewModal();
+        closeImportFlashcardsModal();
+        closeImportNotesModal();
+        closeImportCornellModal();
+      }
+    });
+
+    // Attach openPreviewPane to note card render (temporary override until integrated deeper)
+window.openPreviewPane = openPreviewPane;
 
 initDB();
 
